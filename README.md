@@ -1,9 +1,11 @@
 # FirewallLog
 SOHO FIREWALL ACTIVITY ANALYSIS
 
-PARSE exported cav logs from the free Syslog Watcher 4.5.2 application
+USING Python amd SQL Anarchy:
 
-IMPORT logs into MySQL 5.7.20-log for analysis
+1 - PARSE exported csv logs from the FREE Syslog Watcher 4.5.2 application
 
-Quick VISUAL of activity
+2 - IMPORT logs into MySQL 5.7.20-log for analysis
+
+3 - Quick VISUAL of activity
 
