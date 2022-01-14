@@ -20,7 +20,7 @@ to = ['todd@tascs.local', 'pi@tascs.test']
 def sendMail(subject, text):
     message = 'Subject: {}\n\n{}'.format(subject, text)
     try:
-        server = smtplib.SMTP('exchange.tascs.local', 25)
+        server = smtplib.SMTP('{}'.format(mySecrets.mailserver), 25)
         server.ehlo()
         server.sendmail(sent_from, to, message)
         server.close()
@@ -30,4 +30,6 @@ def sendMail(subject, text):
         print(str(e))
         print('Something went wrong...')
 
+# 4 TESTING
 
+# sendMail('test', 'test email ran from mailer module, not imported')
