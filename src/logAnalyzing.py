@@ -1,39 +1,33 @@
 import pandas as pd
-import pymysql
+import sqlalchemy as sa
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import mySecrets
 
-# PANDAS SETUP
-pd.set_option('max_colwidth', 800)
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
+engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
 
-con = pymysql.connect(host='localhost',
-					  user='root',
-					  password='TASC_68',
-					  db='srcip-lup'
-					  )
+with engine.connect() as conn, conn.begin():
+	lookupDF = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;'''
+						, con=conn)
+	nocountryDF = pd.read_sql('''SELECT * from lookup WHERE country is null or country = ''
+								or country = 'notfound' or length(country) = 2;'''
+						, con=conn)
 
-with con.cursor() as rCursor:
-    sql = '''SELECT ip, country FROM source2020;'''
-    rCursor.execute(sql)  # , ('ip', 'hostname', 'country'))
-    rec = rCursor.fetchall()
-con.commit()
+print(nocountryDF)
+print(lookupDF.head(15))
 
-df = pd.DataFrame(rec, columns=('HITS', 'COUNTRY'))
-totalHits = df['HITS'].count()
-print(totalHits)
-df_Groups = df.groupby(by='COUNTRY').count()
-df_GroupsSorted = df_Groups.sort_values(by='HITS', ascending=False)
-top15 = df_GroupsSorted.head(15)
-# print(type(top15), top15.info())
-
+# totalHits = df['HITS'].count()
+# print(totalHits)
+# df_Groups = df.groupby(by='COUNTRY').count()
+# df_GroupsSorted = df_Groups.sort_values(by='HITS', ascending=False)
+# top15 = df_GroupsSorted.head(15)
+# # print(type(top15), top15.info())
+#
 # plt.ion()
 plt.style.use('ggplot')  # 'ggplot' 'classic'
-ax = top15.plot(kind='bar', color="indigo", fontsize=13)
-ax.set_alpha(1.8)
-ax.set_title("TOP 15 FIREWALL HITS by COUNTRY", fontsize=22)
+ax = lookupDF[:14].plot(kind='bar', color="indigo", fontsize=13)
+ax.set_alpha(.8)
+ax.set_title("TOP 15 FIREWALL COUNTRY", fontsize=22)
 
 plt.xticks(rotation=45, ha= 'right', va = 'center_baseline')
 
