@@ -1,7 +1,7 @@
 # FirewallLog
 SOHO FIREWALL ACTIVITY ANALYSIS
 
-USING Python amd SQL Anarchy:
+USING Python with SQL Anarchy:
 
 1 - PARSE exported csv logs from the FREE Syslog Watcher 4.5.2 application
 
