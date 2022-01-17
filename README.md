@@ -9,3 +9,5 @@ USING Python 3.8 with SQLAnarchy imported:
 
 3 - Quick VISUAL of activity
 
+src folder contains the python files
+sample folder contains 1 day of my firewall log and my database table used to lookup country names from 2 character code
