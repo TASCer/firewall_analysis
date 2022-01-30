@@ -1,27 +1,34 @@
-# Updates lookup table ip to country names
-# Initial lookup populated with LoadActivity deduped
+# Updates lookup table with unique ips to full country name
+# If country code not found, "" entered into lookup table
+# If country code is found, but code not in countries table, enter its ALPHA-2 code into lookup table to resolve later
+# Populated countries table using file found on the web
+# I exported my countries table to the sample folder
+
 
 import sqlalchemy as sa
-# from ipwhois import IPWhois
 import ipwhois
 import mySecrets
-from mailer import sendMail
+# from mailer import sendMail
 
-engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
+engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass,
+                                                                   mySecrets.dbhost, mySecrets.dbname))
 
 with engine.connect() as conn, conn.begin():
-    sql = '''SELECT source, country from lookup WHERE country is null or country = '';'''
+    sql = '''SELECT source, country from lookup WHERE country = '' or country is Null;'''
     lookups = conn.execute(sql)
+
     for ip, country in lookups:
+
         # Try to get a response
         try:
             obj = ipwhois.IPWhois(ip)
             result = obj.lookup_rdap()
+
         except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                 ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
             msg = str(e)
-            print(msg + " IPWhois lookup FAILED!", ip)
-            sendMail("IPWhois lookup FAILED!", msg)
+            print(msg + " 1st EXCEPT: IPWhois lookup FAILED!", ip)
+            continue
 
         # Try to get the country code
         try:
@@ -31,23 +38,20 @@ with engine.connect() as conn, conn.begin():
                 print('got country response', countryRes)
 
             elif not countryRes:
-                print("no country code found in asn", ip)
-                conn.execute('''update lookup SET country = '{}' WHERE SOURCE = '{}';'''.format('notfound', ip))
-                print("UPDATED DB with notfound")
-                continue
+                raise ValueError
 
         except (ValueError, AttributeError) as e:
-            print("EXCEPTION: no country code found in asn", ip)
-            sendMail("Country Code for IP not Found!", ip)
+            print("2nd EXCEPT: no country code found in asn", ip)
+            continue
 
         # Try to get country name from country code
         try:
             countryRes = result['asn_country_code'].lower()
-            countryLU = conn.execute("SELECT name from countries WHERE alpha2 = '{}';".format(countryRes))
+            countryLU = conn.execute(f"SELECT name from countries WHERE alpha2 = '{countryRes}';")
             country = [n for n in countryLU][0][0]
-            print(country)
-            conn.execute('''update lookup SET country = '{}' WHERE SOURCE = '{}';'''.format(country, ip))
+            conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
 
         except Exception as e:
-            print('************2nd except!! most likely country name not found research ISO code********** ', e)
-            conn.execute('''update lookup SET country = '{}' WHERE SOURCE = '{}';'''.format(countryRes, ip))
+            print('************3rd except: most likely country name not found. Research ISO code********** ', ip, e)
+            conn.execute(f'''update lookup SET country = '{countryRes}' WHERE SOURCE = '{ip}';''')
+

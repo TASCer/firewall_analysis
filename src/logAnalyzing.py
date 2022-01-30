@@ -7,11 +7,12 @@ engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbu
 
 with engine.connect() as conn, conn.begin():
 	lookupDF = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;''',
-						con=conn,index_col='COUNTRY')
+							con=conn, index_col='COUNTRY')
 	nocountryDF = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = '' 
-								or country = 'notfound' or length(country) = 2 group by country order by hits desc;''',
-						con=conn, index_col='COUNTRY')
-
+							or country = 'notfound' or length(country) = 2 group by country order by hits desc;''',
+							con=conn, index_col='COUNTRY')
+	freqPortsDF = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
+							con=conn, index_col='DPT')
 
 # plot Top 15 countrys in lookup table
 
@@ -39,6 +40,16 @@ plt.style.use('ggplot')  # 'ggplot' 'classic'
 ax = nocountryDF.plot(kind='bar', color="blue", fontsize=10)
 ax.set_alpha(.2)
 ax.set_title("COUNTRY NAME NOT RESOLVED", fontsize=13)
+plt.xticks(rotation=45, ha='right', va='center_baseline')
+
+plt.show(block=False)
+plt.pause(30)
+plt.close()
+
+plt.style.use('ggplot')  # 'ggplot' 'classic'
+ax = freqPortsDF.plot(kind='bar', color="blue", fontsize=10)
+ax.set_alpha(.2)
+ax.set_title("TOP 15 Destination Ports", fontsize=13)
 plt.xticks(rotation=45, ha='right', va='center_baseline')
 
 plt.show(block=False)

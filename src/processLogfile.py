@@ -1,5 +1,3 @@
-# TAKE EXPORTED LOGS FROM SYSLOG WATCHER (readme explains settings) AND IMPORT / FORMAT raw logs VIA PYTHON into MySQL
-
 import sqlalchemy as sa
 import pandas as pd
 import mySecrets
@@ -12,13 +10,13 @@ start = time.perf_counter()
 print('FW activity and lookup tables update process STARTED')
 
 logPath = mySecrets.logPath
-logFile = "\Jan12-Jan13.csv"
+logFile = r"\Jan25-Jan30.csv"
 
 exportPath = "{}{}".format(logPath, logFile)
 
 
 def processLogs():
-    # filename range time is 12:00am
+    """Takes in a csv log file, parses it, and returns a pandas Dataframe"""
     logs = pd.read_csv(exportPath, sep=",", names=["DOW", "ODATE", "MESSAGE"])
     logs['YEAR'] = logs["MESSAGE"].apply(lambda st: st[0:5])
     logs["DATE"] = logs["ODATE"] + "," + logs["YEAR"]
@@ -40,7 +38,6 @@ def processLogs():
     logs["HOSTNAME"] = logs["HOSTNAME"].str.replace(")", "")
     logs["SOURCE"] = logs["SOURCE"].apply(lambda st: st.split('(')[0])
     logs["SOURCE"] = logs["SOURCE"].apply(lambda st: st.replace(' ', ''))
-    # remove repeated messages, some are as high as 7
     logs = logs[~logs['SOURCE'].str.contains(':')]
     del logs["MESSAGE"]
 
@@ -48,6 +45,7 @@ def processLogs():
 
 
 def dbLoad(log):
+    """Takes in a pandas Dataframe and insert/append into the MySQL database: activity"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
     with engine.connect() as conn, conn.begin():
         return log.to_sql(name='activity',
@@ -62,14 +60,14 @@ def dbLoad(log):
                           )
 
 
-# UPDATE LOOKUP table with ipubique IP if not found. Will later be tied to a country name
 def lookupUpdate():
+    """Get distinct source ip addresses and populate the MySQL database: lookup"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
     with engine.connect() as conn, conn.begin():
         createLookupSQL = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(14) NOT NULL UNIQUE, COUNTRY CHAR(100))"
         conn.execute(createLookupSQL)
 
-        getUniqueSourcesSQL = '''SELECT DISTINCT(SOURCE) from activity;'''
+        getUniqueSourcesSQL = """SELECT DISTINCT(SOURCE) from activity;"""
         UniqueSources = conn.execute(getUniqueSourcesSQL)
 
         for ip in UniqueSources:
@@ -80,10 +78,13 @@ def lookupUpdate():
 
 if __name__ == "__main__":
     log = processLogs()
+    numberProcessed = len(log)
+    print(numberProcessed)
     dbLoad(log)
     lookupUpdate()
     import dbUpdateLookup
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     print("***Elapsed Time***  ", elapsedTime)
-    sendMail('FW activity and lookup tables update process COMPLETED', "Time Elapsed (secs): {}".format(elapsedTime))
+    sendMail("FW activity and lookup tables updated COMPLETED for {} records".format(numberProcessed), "Time Elapsed (secs): {}".format(elapsedTime))
+    import logAnalyzing
