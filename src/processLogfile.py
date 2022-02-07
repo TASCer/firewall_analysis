@@ -10,7 +10,7 @@ start = time.perf_counter()
 print('FW activity and lookup tables update process STARTED')
 
 logPath = mySecrets.logPath
-logFile = r"\Jan25-Jan30.csv"
+logFile = r"\Feb3-Feb4.csv"
 
 exportPath = "{}{}".format(logPath, logFile)
 
@@ -64,7 +64,7 @@ def lookupUpdate():
     """Get distinct source ip addresses and populate the MySQL database: lookup"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
     with engine.connect() as conn, conn.begin():
-        createLookupSQL = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(14) NOT NULL UNIQUE, COUNTRY CHAR(100))"
+        createLookupSQL = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15) NOT NULL UNIQUE, COUNTRY CHAR(100))"
         conn.execute(createLookupSQL)
 
         getUniqueSourcesSQL = """SELECT DISTINCT(SOURCE) from activity;"""
