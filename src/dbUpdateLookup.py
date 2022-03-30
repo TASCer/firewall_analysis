@@ -13,45 +13,59 @@ import mySecrets
 engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass,
                                                                    mySecrets.dbhost, mySecrets.dbname))
 
-with engine.connect() as conn, conn.begin():
-    sql = '''SELECT source, country from lookup WHERE country = '' or country is Null;'''
-    lookups = conn.execute(sql)
 
-    for ip, country in lookups:
+def update():
 
-        # Try to get a response
-        try:
-            obj = ipwhois.IPWhois(ip)
-            result = obj.lookup_rdap()
+    with engine.connect() as conn, conn.begin():
+        sql = '''SELECT source, country from lookup WHERE country = '' or country is Null;'''
+        lookups = conn.execute(sql)
 
-        except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
-                ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
-            msg = str(e)
-            print(msg + " 1st EXCEPT: IPWhois lookup FAILED!", ip)
-            continue
+        for ip, country in lookups:
 
-        # Try to get the country code
-        try:
-            countryRes = result['asn_country_code'].lower()
+            # Try to get a response via RDAP
+            try:
+                obj = ipwhois.IPWhois(ip)
+                result = obj.lookup_rdap()
 
-            if countryRes:
-                print('got country response', countryRes)
+            except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
+                    ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
+                msg = str(e)
+                print(msg + " 1st EXCEPT: RDAP lookup FAILED!", ip)
 
-            elif not countryRes:
-                raise ValueError
 
-        except (ValueError, AttributeError) as e:
-            print("2nd EXCEPT: no country code found in asn", ip)
-            continue
+            # Try to get a response via WHOIS
+            try:
+                obj = ipwhois.IPWhois(ip)
+                result = obj.lookup_whois(ip)
 
-        # Try to get country name from country code
-        try:
-            countryRes = result['asn_country_code'].lower()
-            countryLU = conn.execute(f"SELECT name from countries WHERE alpha2 = '{countryRes}';")
-            country = [n for n in countryLU][0][0]
-            conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
+            except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
+                    ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
+                msg = str(e)
+                print(msg + " 2nd EXCEPT: RDAP lookup FAILED!", ip)
 
-        except Exception as e:
-            print('************3rd except: most likely country name not found. Research ISO code********** ', ip, e)
-            conn.execute(f'''update lookup SET country = '{countryRes}' WHERE SOURCE = '{ip}';''')
 
+            # Try to get the country code
+            try:
+                country_res = result['asn_country_code']
+
+                if country_res is not None:
+                    country_res = country_res.lower()
+                    print('got country response', country_res, ip)
+
+                elif country_res is None:
+                    raise ValueError
+
+            except (ValueError, AttributeError) as e:
+                print("3rd EXCEPT: no country code found in asn", ip, str(e))
+                continue
+
+            # Try to get country name from country code
+            try:
+                country_res = result['asn_country_code'].lower()
+                country_lookup = conn.execute(f"SELECT name from countries WHERE alpha2 = '{country_res}';")
+                country = [n for n in country_lookup][0][0]
+                conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
+
+            except Exception as e:
+                print('************3rd except: most likely country name not found. Research ISO code********** ', ip, e)
+                conn.execute(f'''update lookup SET country = '{country_res}' WHERE SOURCE = '{ip}';''')
