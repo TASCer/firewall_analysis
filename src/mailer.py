@@ -17,7 +17,8 @@ exchange_password = mySecrets.exchange_password  # NOT NEEDED FOR INTERNAL SMTP 
 sent_from = exchange_user
 to = ['todd@tascs.local', 'pi@tascs.test']
 
-def sendMail(subject, text):
+
+def send_mail(subject, text):
     message = 'Subject: {}\n\n{}'.format(subject, text)
     try:
         server = smtplib.SMTP('{}'.format(mySecrets.mailserver), 25)
@@ -30,6 +31,5 @@ def sendMail(subject, text):
         print(str(e))
         print('Something went wrong...')
 
-# 4 TESTING
-
-# sendMail('test', 'test email ran from mailer module, not imported')
+# 4 TESTING # No workie on TEST domain until I add my IP to EXCHANGE
+# send_mail('test', 'test email ran from mailer module, not imported')
