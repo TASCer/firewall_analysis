@@ -8,7 +8,6 @@
 import sqlalchemy as sa
 import ipwhois
 import mySecrets
-# from mailer import sendMail
 
 engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass,
                                                                    mySecrets.dbhost, mySecrets.dbname))
@@ -17,7 +16,7 @@ engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbu
 def update():
 
     with engine.connect() as conn, conn.begin():
-        sql = '''SELECT source, country from lookup WHERE country = '' or country is Null;'''
+        sql = '''SELECT source, country from lookup WHERE country is Null;'''
         lookups = conn.execute(sql)
 
         for ip, country in lookups:
@@ -41,14 +40,14 @@ def update():
             except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                     ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 msg = str(e)
-                print(msg + " 2nd EXCEPT: RDAP lookup FAILED!", ip)
+                print(msg + " 2nd EXCEPT: WHOIS lookup FAILED!", ip)
 
 
             # Try to get the country code
             try:
                 country_res = result['asn_country_code']
-
-                if country_res is not None:
+                # print('***', country_res, type(country_res))
+                if country_res:
                     country_res = country_res.lower()
                     print('got country response', country_res, ip)
 
@@ -57,7 +56,7 @@ def update():
 
             except (ValueError, AttributeError) as e:
                 print("3rd EXCEPT: no country code found in asn", ip, str(e))
-                continue
+
 
             # Try to get country name from country code
             try:
@@ -67,5 +66,5 @@ def update():
                 conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
 
             except Exception as e:
-                print('************3rd except: most likely country name not found. Research ISO code********** ', ip, e)
+                print('************4th except: most likely country name not found. Research ISO code********** ', ip, e)
                 conn.execute(f'''update lookup SET country = '{country_res}' WHERE SOURCE = '{ip}';''')
