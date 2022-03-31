@@ -2,20 +2,24 @@ import sqlalchemy as sa
 import pandas as pd
 import mySecrets
 import datetime as dt
-from mailer import sendMail
 import time
+import dbUpdateLookup
+import logAnalyzing
+
+from mailer import send_mail
 
 # JOB TIMER
 start = time.perf_counter()
 print('FW activity and lookup tables update process STARTED')
+print('------------------------------------------------------')
 
 logPath = mySecrets.logPath
-logFile = r"\Feb3-Feb4.csv"
+logFile = r"\Mar30-Mar31.csv"
 
 exportPath = "{}{}".format(logPath, logFile)
 
 
-def processLogs():
+def process_logs():
     """Takes in a csv log file, parses it, and returns a pandas Dataframe"""
     logs = pd.read_csv(exportPath, sep=",", names=["DOW", "ODATE", "MESSAGE"])
     logs['YEAR'] = logs["MESSAGE"].apply(lambda st: st[0:5])
@@ -44,47 +48,47 @@ def processLogs():
     return logs
 
 
-def dbLoad(log):
+def db_load(cur_log):
     """Takes in a pandas Dataframe and insert/append into the MySQL database: activity"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
     with engine.connect() as conn, conn.begin():
-        return log.to_sql(name='activity',
-                          con=conn,
-                          if_exists='append',  # append / replace / fail
-                          index=False,
-                          dtype={
-                                "DATE": sa.types.Date,
-                                "TIME": sa.types.TIME(6),
-                                "DPT": sa.types.INT
-                                }
-                          )
+        return cur_log.to_sql(name='activity',
+                              con=conn,
+                              if_exists='append',  # append / replace / fail
+                              index=False,
+                              dtype={
+                                    "DATE": sa.types.Date,
+                                    "TIME": sa.types.TIME(6),
+                                    "DPT": sa.types.INT
+                                    }
+                              )
 
 
-def lookupUpdate():
+def lookup_update():
     """Get distinct source ip addresses and populate the MySQL database: lookup"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
     with engine.connect() as conn, conn.begin():
-        createLookupSQL = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15) NOT NULL UNIQUE, COUNTRY CHAR(100))"
-        conn.execute(createLookupSQL)
+        create_lookup = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15) NOT NULL UNIQUE, COUNTRY CHAR(100))"
+        conn.execute(create_lookup)
 
-        getUniqueSourcesSQL = """SELECT DISTINCT(SOURCE) from activity;"""
-        UniqueSources = conn.execute(getUniqueSourcesSQL)
+        sql_unique_sources = """SELECT DISTINCT(SOURCE) from activity;"""
+        unique_sources = conn.execute(sql_unique_sources)
 
-        for ip in UniqueSources:
+        for ip in unique_sources:
             ip = ip[0]
-            insSQL = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
-            conn.execute(insSQL)
+            sql_inserts = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
+            conn.execute(sql_inserts)
 
 
 if __name__ == "__main__":
-    log = processLogs()
-    numberProcessed = len(log)
-    print(numberProcessed)
-    dbLoad(log)
-    lookupUpdate()
-    import dbUpdateLookup
-    end = time.perf_counter()
-    elapsedTime = dt.timedelta(seconds=int(end - start))
-    print("***Elapsed Time***  ", elapsedTime)
-    sendMail("FW activity and lookup tables updated COMPLETED for {} records".format(numberProcessed), "Time Elapsed (secs): {}".format(elapsedTime))
-    import logAnalyzing
+    # log = process_logs()
+    # processed_count = len(log)
+    # print(processed_count)
+    # db_load(log)
+    # lookup_update()
+    dbUpdateLookup.update()
+    # end = time.perf_counter()
+    # elapsedTime = dt.timedelta(seconds=int(end - start))
+    # print("***Elapsed Time***  ", elapsedTime)
+    # send_mail(f"activity and lookup tables COMPLETE: Updated {processed_count} records", f"Timer: {elapsedTime} (secs)")
+    logAnalyzing.analyze()
