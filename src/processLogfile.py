@@ -14,7 +14,7 @@ print('FW activity and lookup tables update process STARTED')
 print('------------------------------------------------------')
 
 logPath = mySecrets.logPath
-logFile = r"\Mar30-Mar31.csv"
+logFile = r"\Apr15-Apr18.csv"
 
 exportPath = "{}{}".format(logPath, logFile)
 
@@ -81,14 +81,14 @@ def lookup_update():
 
 
 if __name__ == "__main__":
-    # log = process_logs()
-    # processed_count = len(log)
-    # print(processed_count)
-    # db_load(log)
-    # lookup_update()
+    log = process_logs()
+    processed_count = len(log)
+    print(processed_count)
+    db_load(log)
+    lookup_update()
     dbUpdateLookup.update()
-    # end = time.perf_counter()
-    # elapsedTime = dt.timedelta(seconds=int(end - start))
-    # print("***Elapsed Time***  ", elapsedTime)
-    # send_mail(f"activity and lookup tables COMPLETE: Updated {processed_count} records", f"Timer: {elapsedTime} (secs)")
+    end = time.perf_counter()
+    elapsedTime = dt.timedelta(seconds=int(end - start))
+    print("***Elapsed Time***  ", elapsedTime)
+    send_mail(f"activity and lookup tables COMPLETE: Updated {processed_count} records", f"Timer: {elapsedTime} (secs)")
     logAnalyzing.analyze()
