@@ -5,7 +5,7 @@ import mySecrets
 
 engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
 
-
+# TODO output graphs to png. working, fix sizing
 def analyze():
 	with engine.connect() as conn, conn.begin():
 		lookup = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;''',
@@ -15,9 +15,11 @@ def analyze():
 							con=conn, index_col='COUNTRY')
 		freq_ports = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
 							con=conn, index_col='DPT')
+		freq_hostnames = pd.read_sql('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''',
+							con=conn, index_col='HOSTNAME')
+
 
 	# plot Top 15 countrys in lookup table
-
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 	ax = lookup[:14].plot(kind='bar', color="indigo", fontsize=13)
 	ax.set_alpha(.8)
@@ -33,11 +35,11 @@ def analyze():
 	mng = plt.get_current_fig_manager()
 	mng.window.showMaximized()
 	plt.show(block=False)
+	plt.savefig('../output/top_countries.png')
 	plt.pause(30)
 	plt.close()
 
 	# plot country codes that cannot map to country name
-
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
@@ -45,9 +47,11 @@ def analyze():
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 
 	plt.show(block=False)
+	plt.savefig('../output/no_countries.png')
 	plt.pause(30)
 	plt.close()
 
+	# plot frequent ports coming into router
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 	ax = freq_ports.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
@@ -55,5 +59,18 @@ def analyze():
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 
 	plt.show(block=False)
+	plt.savefig('../output/top_ports.png')
+	plt.pause(30)
+	plt.close()
+
+	# plot frequent hostnames coming into router
+	plt.style.use('ggplot')  # 'ggplot' 'classic'
+	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=10)
+	ax.set_alpha(.2)
+	ax.set_title("TOP 15 HOSTNAMES", fontsize=13)
+	plt.xticks(rotation=45, ha='right', va='center_baseline')
+
+	plt.show(block=False)
+	plt.savefig('../output/top_hostnames.png')
 	plt.pause(30)
 	plt.close()
