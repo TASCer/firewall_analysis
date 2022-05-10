@@ -5,12 +5,13 @@ import mySecrets
 
 engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
 
-# TODO output graphs to png. working, fix sizing
+
+# TODO countries and hostnames issues - fix sizing
 def analyze():
 	with engine.connect() as conn, conn.begin():
-		lookup = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;''',
+		top_countries = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;''',
 							con=conn, index_col='COUNTRY')
-		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = '' 
+		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = ''
 							or country = 'notfound' or length(country) = 2 group by country order by hits desc;''',
 							con=conn, index_col='COUNTRY')
 		freq_ports = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
@@ -18,24 +19,20 @@ def analyze():
 		freq_hostnames = pd.read_sql('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''',
 							con=conn, index_col='HOSTNAME')
 
-
 	# plot Top 15 countrys in lookup table
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
-	ax = lookup[:14].plot(kind='bar', color="indigo", fontsize=13)
+	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
+	# print(ax)
 	ax.set_alpha(.8)
 	ax.set_title("TOP 15 FIREWALL SOURCE COUNTRY", fontsize=22)
 
-	plt.xticks(rotation=45, ha='right', va='center_baseline')
+	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
-	ax.set_ylabel("Hit Count", fontsize=15)
-	ax.set_xlabel("Country", fontsize=15)
+	ax.set_ylabel("Hits", fontsize=12)
+	ax.set_xlabel("Country", fontsize=12)
 
-	legend = ax.legend(loc='upper center', shadow=True, fontsize='x-large')
-
-	mng = plt.get_current_fig_manager()
-	mng.window.showMaximized()
 	plt.show(block=False)
-	plt.savefig('../output/top_countries.png')
+	plt.savefig('../output/top_countries.png', dpi='figure')
 	plt.pause(30)
 	plt.close()
 
@@ -45,7 +42,6 @@ def analyze():
 	ax.set_alpha(.2)
 	ax.set_title("COUNTRY NAME NOT RESOLVED", fontsize=13)
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
-
 	plt.show(block=False)
 	plt.savefig('../output/no_countries.png')
 	plt.pause(30)
@@ -57,7 +53,6 @@ def analyze():
 	ax.set_alpha(.2)
 	ax.set_title("TOP 15 Destination Ports", fontsize=13)
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
-
 	plt.show(block=False)
 	plt.savefig('../output/top_ports.png')
 	plt.pause(30)
@@ -65,12 +60,11 @@ def analyze():
 
 	# plot frequent hostnames coming into router
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
-	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=10)
+	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=6)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 HOSTNAMES", fontsize=13)
-	plt.xticks(rotation=45, ha='right', va='center_baseline')
-
+	ax.set_title("TOP 15 HOSTNAMES", fontsize=12)
+	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.show(block=False)
-	plt.savefig('../output/top_hostnames.png')
+	plt.savefig('../output/top_hostnames.png', dpi='figure')
 	plt.pause(30)
 	plt.close()
