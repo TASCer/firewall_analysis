@@ -7,7 +7,7 @@ USING Python 3.8 with SQLAnarchy imported:
 
 2 - IMPORT logs into MySQL 5.7.20-log for analysis
 
-3 - Quick VISUAL of activity
+3 - Quick VISUAL of activity - Plots saved in output folder as .png
 
 src folder contains: 
 
