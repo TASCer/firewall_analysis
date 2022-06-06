@@ -29,7 +29,7 @@ def update():
             except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                     ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 msg = str(e)
-                print(msg + " 1st EXCEPT: RDAP lookup FAILED!", msg)
+                print(msg + " 1st EXCEPT", ip)
 
 
             # Try to get a response via WHOIS
@@ -40,7 +40,7 @@ def update():
             except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                     ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 msg = str(e)
-                print(msg + " 2nd EXCEPT: WHOIS lookup FAILED!", ip, msg)
+                print(msg + " 2nd EXCEPT", ip)
 
 
             # Try to get the country code
@@ -55,7 +55,7 @@ def update():
                     raise ValueError
 
             except (ValueError, AttributeError) as e:
-                print("3rd EXCEPT: no country code found in asn", ip, str(e))
+                print(str(e), "3rd EXCEPT: no country code found in asn", ip)
 
 
             # Try to get country name from country code
