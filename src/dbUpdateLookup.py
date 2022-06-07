@@ -1,8 +1,8 @@
 # Updates lookup table with unique ips to full country name
 # If country code not found, "" entered into lookup table
 # If country code is found, but code not in countries table, enter its ALPHA-2 code into lookup table to resolve later
-# Populated countries table using file found on the web
-# I exported my countries table to the sample folder
+# Populated 'countries' table using file found on the web
+# I exported my countries' table to the sample folder
 
 
 import sqlalchemy as sa
@@ -29,8 +29,7 @@ def update():
             except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                     ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 msg = str(e)
-                print(msg + " 1st EXCEPT", ip)
-
+                print(msg + f" RDAP EXCEPT on {ip}")
 
             # Try to get a response via WHOIS
             try:
@@ -40,8 +39,7 @@ def update():
             except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                     ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 msg = str(e)
-                print(msg + " 2nd EXCEPT", ip)
-
+                print(msg + f" Whois EXCEPT on {ip}")
 
             # Try to get the country code
             try:
@@ -49,14 +47,12 @@ def update():
                 # print('***', country_res, type(country_res))
                 if country_res:
                     country_res = country_res.lower()
-                    # print('got country response', country_res, ip)
 
                 elif country_res is None:
                     raise ValueError
 
             except (ValueError, AttributeError) as e:
-                print(str(e), "3rd EXCEPT: no country code found in asn", ip)
-
+                print(str(e), f"NO country code found in asn for {ip}")
 
             # Try to get country name from country code
             try:
@@ -66,5 +62,5 @@ def update():
                 conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
 
             except Exception as e:
-                print('************4th except: most likely country name not found. Research ISO code********** ', ip, e)
+                print(str(e), f'***country name not found in countries DB for {country_res}. Research ISO codes*** ')
                 conn.execute(f'''update lookup SET country = '{country_res}' WHERE SOURCE = '{ip}';''')
