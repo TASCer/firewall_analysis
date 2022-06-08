@@ -20,7 +20,6 @@ def analyze():
 							con=conn, index_col='HOSTNAME')
 
 	# plot Top 15 countrys in lookup table
-	# TODO hostnames are not fully shown - resize?
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
@@ -68,7 +67,6 @@ def analyze():
 	plt.close()
 
 	# plot frequent hostnames coming into router
-	# TODO hostnames are not fully shown - resize?
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
 	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=6)
