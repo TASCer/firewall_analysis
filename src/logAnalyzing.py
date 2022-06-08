@@ -20,7 +20,9 @@ def analyze():
 							con=conn, index_col='HOSTNAME')
 
 	# plot Top 15 countrys in lookup table
+	# TODO hostnames are not fully shown - resize?
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
+
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
 	# print(ax)
 	ax.set_alpha(.8)
@@ -31,6 +33,7 @@ def analyze():
 	ax.set_ylabel("Hits", fontsize=12)
 	ax.set_xlabel("Country", fontsize=12)
 
+	plt.tight_layout()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries.png', dpi='figure')
 	plt.pause(30)
@@ -38,10 +41,13 @@ def analyze():
 
 	# plot country codes that cannot map to country name
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
+
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
 	ax.set_title("COUNTRY NAME NOT RESOLVED", fontsize=13)
+
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
+	plt.tight_layout()
 	plt.show(block=False)
 	plt.savefig('../output/no_countries.png')
 	plt.pause(30)
@@ -49,21 +55,28 @@ def analyze():
 
 	# plot frequent ports coming into router
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
+
 	ax = freq_ports.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
 	ax.set_title("TOP 15 Destination Ports", fontsize=13)
+
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
+	plt.tight_layout()
 	plt.show(block=False)
 	plt.savefig('../output/top_ports.png')
 	plt.pause(30)
 	plt.close()
 
 	# plot frequent hostnames coming into router
+	# TODO hostnames are not fully shown - resize?
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
+
 	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=6)
 	ax.set_alpha(.2)
 	ax.set_title("TOP 15 HOSTNAMES", fontsize=12)
+
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
+	plt.tight_layout()
 	plt.show(block=False)
 	plt.savefig('../output/top_hostnames.png', dpi='figure')
 	plt.pause(30)
