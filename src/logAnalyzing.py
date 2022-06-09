@@ -25,7 +25,7 @@ def analyze():
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
 	# print(ax)
 	ax.set_alpha(.8)
-	ax.set_title("TOP 15 FIREWALL SOURCE COUNTRY", fontsize=22)
+	ax.set_title("TOP 15 SOURCE COUNTRIES", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
@@ -43,7 +43,7 @@ def analyze():
 
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("COUNTRY NAME NOT RESOLVED", fontsize=13)
+	ax.set_title("COUNTRY ALPHA-2 NOT RESOLVED", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -55,7 +55,7 @@ def analyze():
 	# plot frequent ports coming into router
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
-	ax = freq_ports.plot(kind='bar', color="blue", fontsize=10)
+	ax = freq_ports.plot(kind='bar', color="green", fontsize=10)
 	ax.set_alpha(.2)
 	ax.set_title("TOP 15 Destination Ports", fontsize=13)
 
