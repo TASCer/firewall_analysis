@@ -33,6 +33,8 @@ def analyze():
 	ax.set_xlabel("Country", fontsize=12)
 
 	plt.tight_layout()
+	mng = plt.get_current_fig_manager()
+	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries.png', dpi='figure')
 	plt.pause(30)
@@ -47,6 +49,9 @@ def analyze():
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
+
+	mng = plt.get_current_fig_manager()
+	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/no_countries.png')
 	plt.pause(30)
@@ -61,6 +66,9 @@ def analyze():
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
+
+	mng = plt.get_current_fig_manager()
+	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_ports.png')
 	plt.pause(30)
@@ -69,12 +77,15 @@ def analyze():
 	# plot frequent hostnames coming into router
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
-	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=6)
+	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=10)
 	ax.set_alpha(.2)
 	ax.set_title("TOP 15 HOSTNAMES", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
+
+	mng = plt.get_current_fig_manager()
+	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_hostnames.png', dpi='figure')
 	plt.pause(30)
