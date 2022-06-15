@@ -1,6 +1,5 @@
-# Updates lookup table with unique ips to full country name
-# If country code not found, "" entered into lookup table
-# If country code is found, but code not in countries table, enter its ALPHA-2 code into lookup table to resolve later
+# If country ALPHA-2 code not found in ASN, '' is entered into lookup table
+# If country code is found, but code not in countries table, its ALPHA-2 code is entered into lookup table to resolve later
 # Populated 'countries' table using file found on the web
 # I exported my countries' table to the sample folder
 
@@ -14,7 +13,7 @@ engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbu
 
 
 def update():
-
+    """Updates lookup table with unique ips from ALPHA-2 to full country name"""
     with engine.connect() as conn, conn.begin():
         sql = '''SELECT source, country from lookup WHERE country is Null;'''
         lookups = conn.execute(sql)
@@ -54,7 +53,7 @@ def update():
             except (ValueError, AttributeError) as e:
                 print(str(e), f"NO country code found in asn for {ip}")
 
-            # Try to get country name from country code
+            # Try to get country name from ALPHA-2 country code
             try:
                 country_res = result['asn_country_code'].lower()
                 country_lookup = conn.execute(f"SELECT name from countries WHERE alpha2 = '{country_res}';")

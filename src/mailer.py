@@ -1,15 +1,5 @@
-# BASE MAIL MODULE
-
 import smtplib
 import mySecrets
-
-# smtp_handler = logging.handlers.SMTPHandler(mailhost=("exchange.tascs.local", 25),
-#                                             fromaddr="PYTHON@tascs.local",
-#                                             toaddrs="todd@tascs.local",
-#                                             subject=u"main.py error!")
-
-# logger = logging.getLogger()
-# logger.addHandler(smtp_handler)
 
 # EMAIL CREDS & PROPERTIES
 exchange_user = mySecrets.exchange_user
@@ -19,6 +9,7 @@ to = ['todd@tascs.local', 'pi@tascs.test']
 
 
 def send_mail(subject, text):
+    """Takes in strings for email subject and contents and sends the email"""
     message = 'Subject: {}\n\n{}'.format(subject, text)
     try:
         server = smtplib.SMTP('{}'.format(mySecrets.mailserver), 25)
