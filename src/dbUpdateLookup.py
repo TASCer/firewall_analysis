@@ -33,7 +33,7 @@ def update():
             # Try to get a response via WHOIS
             try:
                 obj = ipwhois.IPWhois(ip)
-                result = obj.lookup_whois(ip)
+                result = obj.lookup_whois()
 
             except (ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError, ipwhois.ASNParseError, ipwhois.ASNOriginLookupError,
                     ipwhois.ASNRegistryError, ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
