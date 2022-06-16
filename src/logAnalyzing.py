@@ -6,8 +6,8 @@ import mySecrets
 engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
 
 
-# TODO countries and hostnames issues - fix sizing
 def analyze():
+	"""Takes log analysis data stored in databases and presents information to screen and file"""
 	with engine.connect() as conn, conn.begin():
 		top_countries = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;''',
 							con=conn, index_col='COUNTRY')
@@ -19,7 +19,7 @@ def analyze():
 		freq_hostnames = pd.read_sql('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''',
 							con=conn, index_col='HOSTNAME')
 
-	# plot Top 15 countrys in lookup table
+	# plot Top 15 SOURCE countrys found accessing firewall
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
@@ -40,7 +40,7 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-	# plot country codes that cannot map to country name
+	# plot country ALPHA-2 codes that cannot map to country name
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
@@ -57,7 +57,7 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-	# plot frequent ports coming into router
+	# plot frequent ports used coming into router
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 
 	ax = freq_ports.plot(kind='bar', color="green", fontsize=10)
