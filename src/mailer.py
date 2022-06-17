@@ -1,9 +1,8 @@
 import smtplib
 import mySecrets
 
-# EMAIL CREDS & PROPERTIES
 exchange_user = mySecrets.exchange_user
-exchange_password = mySecrets.exchange_password  # NOT NEEDED FOR INTERNAL SMTP test for external & auth
+exchange_password = mySecrets.exchange_password
 sent_from = exchange_user
 to = ['todd@tascs.local', 'pi@tascs.test']
 
