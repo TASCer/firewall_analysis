@@ -1,4 +1,5 @@
-# If country ALPHA-2 code not found in ASN, '' is entered into lookup table
+# New entries into lookup table will have a NULL COUNTRY value
+# If get ASN response, but no ALPHA-2 country code, '' is entered into lookup tbl
 # If country code is found, but code not in countries table, its ALPHA-2 code is entered into lookup table to resolve later
 # Populated 'countries' table using file found on the web
 # I exported my countries' table to the sample folder
