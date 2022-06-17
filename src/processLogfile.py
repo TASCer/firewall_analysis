@@ -10,11 +10,11 @@ from mailer import send_mail
 
 # JOB TIMER
 start = time.perf_counter()
-print('FW activity and lookup tables update process STARTED')
-print('------------------------------------------------------')
+print('Firewall Log Analysis STARTED')
+print('-----------------------------')
 
 logPath = mySecrets.logPath
-logFile = r"\Jun3-Jun6.csv"
+logFile = r"\Jun17-Jun17.csv"
 
 exportPath = "{}{}".format(logPath, logFile)
 
@@ -64,31 +64,29 @@ def db_load(cur_log):
                               )
 
 
-def lookup_update():
-    """Get distinct source ip addresses and populate the MySQL database: lookup"""
+def lookup_update(ips):
+    """Takes distinct ip addresses from logs and populates the MySQL database: lookup"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(mySecrets.dbuser, mySecrets.dbpass, mySecrets.dbhost, mySecrets.dbname))
     with engine.connect() as conn, conn.begin():
         create_lookup = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15) NOT NULL UNIQUE, COUNTRY CHAR(100))"
         conn.execute(create_lookup)
 
-        sql_unique_sources = """SELECT DISTINCT(SOURCE) from activity;"""
-        unique_sources = conn.execute(sql_unique_sources)
-
-        for ip in unique_sources:
-            ip = ip[0]
+        for ip in ips:
             sql_inserts = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
             conn.execute(sql_inserts)
 
 
 if __name__ == "__main__":
     log = process_logs()
-    processed_count = len(log)
-    print(processed_count)
+    print(f'Processed {len(log)} log entries')
+    unique_sources = log.drop_duplicates(subset='SOURCE')
+    unique_sources = unique_sources['SOURCE']
+    print(f'{len(unique_sources)} entries were unique')
     db_load(log)
-    lookup_update()
+    lookup_update(unique_sources)
     dbUpdateLookup.update()
     logAnalyzing.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     print("***Elapsed Time***  ", elapsedTime)
-    send_mail(f"activity and lookup tables COMPLETE: Updated {processed_count} records", f"Process Time: {elapsedTime}")
+    send_mail(f"Firewall Analysis COMPLETE: Updated {len(log)} records - {len(unique_sources)} unique.", f"Process Time: {elapsedTime}")
