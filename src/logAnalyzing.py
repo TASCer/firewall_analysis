@@ -12,7 +12,7 @@ def analyze():
 		top_countries = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc;''',
 							con=conn, index_col='COUNTRY')
 		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = ''
-							or country = 'notfound' or length(country) = 2 group by country order by hits desc;''',
+							or length(country) = 2 group by country order by hits desc;''',
 							con=conn, index_col='COUNTRY')
 		freq_ports = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
 							con=conn, index_col='DPT')
