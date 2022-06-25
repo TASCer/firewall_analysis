@@ -1,8 +1,8 @@
 import smtplib
-import mySecrets
+import my_secrets
 
-exchange_user = mySecrets.exchange_user
-exchange_password = mySecrets.exchange_password
+exchange_user = my_secrets.exchange_user
+exchange_password = my_secrets.exchange_password
 sent_from = exchange_user
 to = ['todd@tascs.local', 'pi@tascs.test']
 
@@ -11,7 +11,7 @@ def send_mail(subject, text):
     """Takes in strings for email subject and contents and sends the email"""
     message = 'Subject: {}\n\n{}'.format(subject, text)
     try:
-        server = smtplib.SMTP('{}'.format(mySecrets.mailserver), 25)
+        server = smtplib.SMTP('{}'.format(my_secrets.mailserver), 25)
         server.ehlo()
         server.sendmail(sent_from, to, message)
         server.close()
