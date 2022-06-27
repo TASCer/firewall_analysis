@@ -13,17 +13,17 @@ engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.db
                                                                    my_secrets.dbhost, my_secrets.dbname))
 
 
+# TODO how to create sa try/except?
 def update():
     """Updates lookup table with unique ips from ALPHA-2 to full country name"""
     with engine.connect() as conn, conn.begin():
-        sql = '''SELECT source, country from testlookup WHERE country is Null;'''
+        sql = '''SELECT source, country from lookup WHERE country is Null or country = '';'''
         lookups = conn.execute(sql)
 
         for ip, country in lookups:
 
             # Try to get a response via RDAP
             try:
-                print('try rdap', ip)
                 obj = ipwhois.IPWhois(ip)
                 result = obj.lookup_rdap()
 
