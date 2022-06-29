@@ -5,15 +5,16 @@ import datetime as dt
 import time
 import tbl_update_lookup_country
 import log_visual_analysis
+import historical_visual_analysis
 
 from mailer import send_mail
 
 start = time.perf_counter()
-print('Firewall Log Analysis STARTED')
-print('-----------------------------')
+print('Firewall Log Processing and Analysis STARTED')
+print('--------------------------------------------')
 
 logPath = my_secrets.logPath
-logFile = r"\Jun24-Jun25.csv"
+logFile = r"\Jun28-Jun29.csv"
 
 exportPath = f"{logPath}{logFile}"
 
@@ -83,11 +84,12 @@ if __name__ == "__main__":
     unique_sources = log.drop_duplicates(subset='SOURCE')
     unique_sources = unique_sources['SOURCE']
     print(f'{len(unique_sources)} entries were unique')
-    # tbl_load_activity(log)
+    tbl_load_activity(log)
     tbl_load_lookup(unique_sources)
     tbl_update_lookup_country.update()
-    # logAnalyzing.analyze()
+    log_visual_analysis.analyze(log)
+    historical_visual_analysis()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     print("***Elapsed Time***  ", elapsedTime)
-    # send_mail(f"Firewall Analysis COMPLETE: Updated {len(log)} records - {len(unique_sources)} unique.", f"Process Time: {elapsedTime}")
+    send_mail(f"Firewall Analysis COMPLETE: Updated {len(log)} records - {len(unique_sources)} unique.", f"Process Time: {elapsedTime}")
