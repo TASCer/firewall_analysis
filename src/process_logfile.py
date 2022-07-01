@@ -14,7 +14,7 @@ print('Firewall Log Processing and Analysis STARTED')
 print('--------------------------------------------')
 
 logPath = my_secrets.logPath
-logFile = r"\Jun28-Jun29.csv"
+logFile = r"\Jun30-Jul1.csv"
 
 exportPath = f"{logPath}{logFile}"
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     tbl_load_lookup(unique_sources)
     tbl_update_lookup_country.update()
     log_visual_analysis.analyze(log)
-    historical_visual_analysis()
+    historical_visual_analysis.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     print("***Elapsed Time***  ", elapsedTime)
