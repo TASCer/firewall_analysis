@@ -11,7 +11,7 @@ def analyze():
 	with engine.connect() as conn, conn.begin():
 		top_countries = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc limit 30;''',
 							con=conn, index_col='COUNTRY')
-		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = ''
+		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = 'notfound'
 							or length(country) = 2 group by country order by hits desc;''',
 							con=conn, index_col='COUNTRY')
 		freq_ports = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
@@ -21,13 +21,13 @@ def analyze():
 		firewall_policies = pd.read_sql('''SELECT POLICY, count(POLICY) as hits from activity where POLICY !='WAN_LOCAL-default-D' group by POLICY;''',
 							con=conn, index_col='POLICY')
 
-	# plot Top 15 SOURCE countrys found accessing firewall
+# HISTORICAL - Plot Top 15 SOURCE countrys found accessing firewall
 	plt.style.use('ggplot')
 
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
 	# print(ax)
 	ax.set_alpha(.8)
-	ax.set_title("TOP 15 SOURCE COUNTRIES", fontsize=10)
+	ax.set_title("TOP 15 SOURCE COUNTRIES - HISTORICAL", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
@@ -42,12 +42,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-	# plot country ALPHA-2 codes that cannot map to country name
+# HISTORICAL - Plot country ALPHA-2 codes that cannot map to country name
 	plt.style.use('ggplot')
 
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("COUNTRY ALPHA-2 NOT RESOLVED", fontsize=13)
+	ax.set_title("COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -59,12 +59,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-	# plot frequent ports used coming into router
-	plt.style.use('ggplot')  # 'ggplot' 'classic'
+# HISTORICAL - Plot frequent ports used coming into router
+	plt.style.use('ggplot')
 
 	ax = freq_ports.plot(kind='bar', color="green", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 Destination Ports", fontsize=13)
+	ax.set_title("TOP 15 Destination Ports - HISTORICAL", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -76,12 +76,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-	# plot frequent hostnames coming into router
+# HISTORICAL - Plot frequent hostnames coming into router
 	plt.style.use('ggplot')
 
 	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 HOSTNAMES", fontsize=12)
+	ax.set_title("TOP 15 HOSTNAMES - HISTORICAL", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -93,12 +93,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-# plot firewall Policy usage
+# HISTORICAL - Plot firewall Policy usage
 	plt.style.use('ggplot')
 
 	ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("Firewall Policies Usage", fontsize=12)
+	ax.set_title("Firewall Policies Usage - HISTORICAL", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
