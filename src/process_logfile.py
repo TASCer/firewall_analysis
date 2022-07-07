@@ -14,7 +14,7 @@ print('Firewall Log Processing and Analysis STARTED')
 print('--------------------------------------------')
 
 logPath = my_secrets.logPath
-logFile = r"\Jun30-Jul1.csv"
+logFile = r"\Ju15-Jul7.csv"
 
 exportPath = f"{logPath}{logFile}"
 
@@ -55,7 +55,7 @@ def tbl_load_activity(cur_log):
     with engine.connect() as conn, conn.begin():
         return cur_log.to_sql(name='activity',
                               con=conn,
-                              if_exists='append',  # append / replace / fail
+                              if_exists='append',
                               index=False,
                               dtype={
                                     "DATE": sa.types.Date,
@@ -66,16 +66,21 @@ def tbl_load_activity(cur_log):
                               )
 
 
-def tbl_load_lookup(ips):
+def tbl_load_lookup(unique_ips):
     """Takes distinct ip addresses from processed logs and INSERTS the MySQL database: lookup"""
     engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
     with engine.connect() as conn, conn.begin():
         create_lookup = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15), COUNTRY CHAR(100), PRIMARY KEY (SOURCE))"
         conn.execute(create_lookup)
 
-        for ip in ips:
+        for ip in unique_ips:
             sql_inserts = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
             conn.execute(sql_inserts)
+
+        new_lookups = conn.execute('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;''')
+        new_lookups_count = tuple(n for n in new_lookups)[0][0]
+
+        return new_lookups_count
 
 
 if __name__ == "__main__":
@@ -85,7 +90,8 @@ if __name__ == "__main__":
     unique_sources = unique_sources['SOURCE']
     print(f'{len(unique_sources)} entries were unique')
     tbl_load_activity(log)
-    tbl_load_lookup(unique_sources)
+    new_lookup_count = tbl_load_lookup(unique_sources)
+    print(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
     log_visual_analysis.analyze(log)
     historical_visual_analysis.analyze()
