@@ -34,23 +34,10 @@ def update():
                     country_lookup = conn.execute(f"SELECT name from countries WHERE alpha2 = '{asn_alpha2}';")
                     country = [n for n in country_lookup][0][0]
                     conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
-                    print(f'country set to: {country} for ip {ip}')
+                    # print(f'country set to: {country} for ip {ip}')
 
             except (ValueError, AttributeError, ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError,
                     ipwhois.ASNParseError, ipwhois.ASNOriginLookupError, ipwhois.ASNRegistryError,
                     ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 print(str(e) + f" on {ip}.")
                 conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
-                # continue
-
-            # Try to get country name from ALPHA-2 country code
-            # try:
-            #     country_lookup = conn.execute(f"SELECT name from countries WHERE alpha2 = '{asn_alpha2}';")
-            #     country = [n for n in country_lookup][0][0]
-            #     conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
-            #     print(f'country set to: {country} for ip {ip}')
-            #
-            # except Exception as e:
-            #     print(str(e), f'***country name not found in countries DB for {ip}. Research*** ')
-            #     conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
-            #     print(f'*******************asn_alpha2 {asn_alpha2} added for {ip}. Research Code*** ')
