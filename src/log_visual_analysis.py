@@ -17,7 +17,7 @@ def analyze(log):
 	firewall_policies = log.groupby(['POLICY']).size()
 	sources = log['SOURCE']
 
-# Get countrird for currently processed log
+# Get countries for currently processed log
 	top_countries = []
 	with engine.connect() as conn, conn.begin():
 		for source in sources:
@@ -26,17 +26,17 @@ def analyze(log):
 			get_country_list = list(get_country.index.values)
 			top_countries.append(get_country_list.pop())
 	counter_top_countries = Counter(top_countries)
-	counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) < 2 or v == 'notfound'}
+	counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) == 2 or v == 'notfound'}
 	# no_countries = [k for k,v in counter_top_countries.values() if (len(counter_top_countries.values()) == 2)]
 	top_15_countries = counter_top_countries.most_common(15)
 
 	print(top_15_countries, type(top_15_countries))
 
-# Plot tOP Countries
+# Plot Top Countries
 	plt.style.use('ggplot')  # 'ggplot' 'classic'
 	x, y = zip(*top_15_countries)
 	plt.bar(x, y)
-	plt.title("TOP 15 SOURCE COUNTRIES", fontsize=10)
+	plt.title("TOP SOURCE COUNTRIES", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
