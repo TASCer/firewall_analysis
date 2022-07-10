@@ -1,5 +1,5 @@
 # New entries into lookup table will have a NULL COUNTRY value
-# If source ip gets an ASN response, but no ALPHA-2 country code, 'notfound' is entered in db for that ip
+# If source ip gets an ASN response, but no ALPHA-2 country code, 'notfound' is entered as Country name in db for that ip
 # If country code is found, but code not in countries table, its ALPHA-2 code is entered into lookup table to resolve later
 # Populated 'countries' table using file found on the web
 # I exported my countries' table to the sample folder
@@ -34,10 +34,11 @@ def update():
                     country_lookup = conn.execute(f"SELECT name from countries WHERE alpha2 = '{asn_alpha2}';")
                     country = [n for n in country_lookup][0][0]
                     conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
-                    # print(f'country set to: {country} for ip {ip}')
+                    print(f'country set to: {country} for ip {ip}')
 
-            except (ValueError, AttributeError, ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError,
+            except (UnboundLocalError, ValueError, AttributeError, ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError,
                     ipwhois.ASNParseError, ipwhois.ASNOriginLookupError, ipwhois.ASNRegistryError,
                     ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 print(str(e) + f" on {ip}.")
+                # asn_alpha2 = 'error'  If get an error like 404 need to define or error. If/Then to fix?
                 conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
