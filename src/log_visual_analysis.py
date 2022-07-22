@@ -4,12 +4,12 @@ import my_secrets
 import pandas as pd
 
 from collections import Counter
-from sqlalchemy import create_engine, exc, types
+from sqlalchemy import create_engine, exc
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-fh = logging.FileHandler('./log.log')
+fh = logging.FileHandler('../log.log')
 fh.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

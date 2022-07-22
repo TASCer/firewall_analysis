@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, exc, types
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-fh = logging.FileHandler('./log.log')
+fh = logging.FileHandler('../log.log')
 fh.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
