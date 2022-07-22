@@ -1,8 +1,3 @@
-# New entries into lookup table will have a NULL COUNTRY value
-# If source ip gets an ASN response, but no ALPHA-2 country code, 'notfound' is entered as Country name in db for that ip
-# If country code is found, but code not in countries table, its ALPHA-2 code is entered into lookup table to resolve later
-# Populated 'countries' table using file found on the web
-# I exported my countries' table to the sample folder
 
 import ipwhois
 import logging
