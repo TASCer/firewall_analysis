@@ -1,22 +1,35 @@
-import sqlalchemy as sa
-import pandas as pd
-import my_secrets
 import datetime as dt
-import time
-import tbl_update_lookup_country
-import log_visual_analysis
 import historical_visual_analysis
+import log_visual_analysis
+import logging
+import my_secrets
+import pandas as pd
+import tbl_update_lookup_country
+import time
 
 from mailer import send_mail
+from sqlalchemy import create_engine, exc, types
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler('./log.log')
+fh.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+
+logger.addHandler(fh)
 
 start = time.perf_counter()
-print('Firewall Log Processing and Analysis STARTED')
-print('--------------------------------------------')
 
-logPath = my_secrets.logPath
-logFile = r"\Ju18-Jul10.csv"
 
-exportPath = f"{logPath}{logFile}"
+log_path = my_secrets.logPath
+log_file = r"\Jul21-Jul22.csv"
+
+exportPath = f"{log_path}{log_file}"
+
+logger.info(f'Log Processing and Analysis STARTED for period: {log_file}')
 
 
 def process_logs():
@@ -45,30 +58,43 @@ def process_logs():
     logs = logs[~logs['SOURCE'].str.contains(':')]
     del logs["MESSAGE"]
 
+    logger.info(f"Logs for the period {log_file} have been processed")
     return logs
 
 
-# TODO test "SOURCE":sa.types.varchar(15) in order to match lookup table for foreign keys?
+# TODO ADD LOGGING. COPY hoainsights
 def tbl_load_activity(cur_log):
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity"""
-    engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
+    try:
+        engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
+                                                                        my_secrets.dbhost, my_secrets.dbname))
+
+    except exc.SQLAlchemyError as e:
+        engine = None
+        logger.exception(str(e))
+
     with engine.connect() as conn, conn.begin():
-        return cur_log.to_sql(name='activity',
-                              con=conn,
-                              if_exists='append',
-                              index=False,
-                              dtype={
-                                    "DATE": sa.types.Date,
-                                    "TIME": sa.types.TIME(6),
-                                    "DPT": sa.types.INT
-                                    # "SOURCE":sa.types.String(length = 15)
-                                    }
-                              )
+        try:
+            return cur_log.to_sql(name='activity',
+                                  con=conn,
+                                  if_exists='append',
+                                  index=False,
+                                  dtype={
+                                        "DATE": types.Date,
+                                        "TIME": types.TIME(6),
+                                        "DPT": types.INT
+                                        # "SOURCE":sa.types.String(length = 15)
+                                        }
+                                  )
+        except exc.SQLAlchemyError as e:
+            logger.exception(str(e))
+
+    logger.info("Activity database has been appended with new logs")
 
 
 def tbl_load_lookup(unique_ips):
     """Takes distinct ip addresses from processed logs and INSERTS the MySQL database: lookup"""
-    engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
+    engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
     with engine.connect() as conn, conn.begin():
         create_lookup = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15), COUNTRY CHAR(100), PRIMARY KEY (SOURCE))"
         conn.execute(create_lookup)
@@ -80,23 +106,25 @@ def tbl_load_lookup(unique_ips):
         new_lookups = conn.execute('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;''')
         new_lookups_count = tuple(n for n in new_lookups)[0][0]
 
+        logger.info("Lookup table has been inserted with new unique source ips")
+
         return new_lookups_count
 
 
 if __name__ == "__main__":
     log = process_logs()
-    print(f'Processed {len(log)} log entries')
+    logger.info(f'Processed {len(log)} log entries')
     unique_sources = log.drop_duplicates(subset='SOURCE')
     unique_sources = unique_sources['SOURCE']
-    print(f'{len(unique_sources)} entries were unique')
+    logger.info(f'{len(unique_sources)} entries were unique')
     tbl_load_activity(log)
     new_lookup_count = tbl_load_lookup(unique_sources)
-    print(f"{new_lookup_count} new records added to lookup table")
+    logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
     log_visual_analysis.analyze(log)
-    # historical_visual_analysis.analyze()
+    historical_visual_analysis.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
-    print("***Elapsed Time***  ", elapsedTime)
+    logger.info(f'Log Processing and Analysis ENDED for period: {log_file}')
     send_mail(f"Firewall Analysis COMPLETE: Updated {len(log)} log entries - {len(unique_sources)} unique. \
               {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
