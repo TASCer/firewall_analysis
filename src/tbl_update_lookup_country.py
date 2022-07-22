@@ -4,41 +4,77 @@
 # Populated 'countries' table using file found on the web
 # I exported my countries' table to the sample folder
 
-import sqlalchemy as sa
 import ipwhois
+import logging
 import my_secrets
 
-engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
-                                                                   my_secrets.dbhost, my_secrets.dbname))
+from sqlalchemy import exc, create_engine
+from ipwhois.utils import get_countries
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler('./log.log')
+fh.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+
+logger.addHandler(fh)
+
+COUNTRIES = get_countries()
 
 
-# TODO how to create sa try/except?
+# TODO Create sa try/except look at 1pwhois countries
 def update():
     """Updates lookup table with unique ips from ALPHA-2 to full country name"""
+    try:
+        engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
+                                                                        my_secrets.dbhost, my_secrets.dbname))
+    except exc.SQLAlchemyError as e:
+        logger.critical(str(e))
+        engine = None
+        exit()
+
     with engine.connect() as conn, conn.begin():
-        sql = '''SELECT source, country from lookup WHERE country is Null;'''
-        lookups = conn.execute(sql)
+        try:
+            sql = '''SELECT source, country from lookup WHERE COUNTRY is Null;'''
+            lookups = conn.execute(sql)
+
+        except exc.SQLAlchemyError as e:
+            logger.warning(str(e))
+            lookups = None
 
         for ip, country in lookups:
             # Try to get a response with country ALPHA2 via RDAP
             try:
                 obj = ipwhois.IPWhois(ip)
                 result = obj.lookup_rdap()
-                if result['asn_country_code'] == '' or result['asn_country_code'] is None:
-                    print(f"{ip} had no alpha2 code")
-                    asn_alpha2 = 'notfound'
-                    conn.execute(f'''update lookup SET country = 'notfound' WHERE SOURCE = '{ip}';''')
-
-                else:
-                    asn_alpha2 = result['asn_country_code'].lower()
-                    country_lookup = conn.execute(f"SELECT name from countries WHERE alpha2 = '{asn_alpha2}';")
-                    country = [n for n in country_lookup][0][0]
-                    conn.execute(f'''update lookup SET country = '{country}' WHERE SOURCE = '{ip}';''')
-                    print(f'country set to: {country} for ip {ip}')
-
             except (UnboundLocalError, ValueError, AttributeError, ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError,
                     ipwhois.ASNParseError, ipwhois.ASNOriginLookupError, ipwhois.ASNRegistryError,
                     ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
-                print(str(e) + f" on {ip}.")
-                # asn_alpha2 = 'error'  If get an error like 404 need to define or error. If/Then to fix?
+
+                logger.warning(f"{str(e)}")
+                conn.execute(f'''update lookup SET country = 'error' WHERE SOURCE = '{ip}';''')
+
+            if result['asn_country_code'] == '' or result['asn_country_code'] is None:
+                logger.warning(f"{ip} had no alpha2 code")
+                asn_alpha2 = 'notfound'
                 conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
+
+            elif result['asn_country_code']:
+                asn_alpha2 = result['asn_country_code']
+                if asn_alpha2.islower():
+                    logger.warning(f'RDAP responded with lowercase country for {ip}, should be upper')
+                    asn_alpha2 = asn_alpha2.upper()
+                country_name = COUNTRIES.get(asn_alpha2)
+                if not country_name:
+                    logger.warning("Country Name not found in COUNTRIES, setting it to alpha-2")
+                    conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
+
+                else:
+                    if "'" in country_name:
+                        logger.info(f"{country_name} has an aposterphe")
+                        country_name =country_name.replace("'", "''")
+                        logger.warning(f"Apostrophe found in {country_name}")
+                    conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
