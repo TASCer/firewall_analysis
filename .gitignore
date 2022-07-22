@@ -1,3 +1,4 @@
-/src/my_secrets.py
-/.idea
-/src/log.log
+my_secrets.py
+.idea
+log.log
+output/
