@@ -46,13 +46,20 @@ def analyze(log):
 			get_country_list = list(get_country.index.values)
 			top_countries.append(get_country_list.pop())
 	counter_top_countries = Counter(top_countries)
-	counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) == 2 or v == 'notfound' or v == 'error'}
-	# no_countries = [k for k,v in counter_top_countries.values() if (len(counter_top_countries.values()) == 2)]
+
+	try:
+		counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) == 2 or v == 'HTTP lookup failed for' or v == ''}
+
+	except TypeError as e:
+		print(str(e))
+		logger.critical(str(e))
+		counter_no_country_name = None
+
 	top_15_countries = counter_top_countries.most_common(15)
 
 
 # Plot Top Countries
-	plt.style.use('ggplot')  # 'ggplot' 'classic'
+	plt.style.use('ggplot')
 	x, y = zip(*top_15_countries)
 	plt.bar(x, y)
 	plt.title("TOP SOURCE COUNTRIES", fontsize=10)
@@ -71,7 +78,7 @@ def analyze(log):
 	plt.close()
 
 # plot SOURCE where country name cammot be determined
-	plt.style.use('ggplot')  # 'ggplot' 'classic'
+	plt.style.use('ggplot')
 	plt.bar(counter_no_country_name.keys(), counter_no_country_name.values())
 	plt.title("COUNTRY ALPHA-2 NOT RESOLVED", fontsize=13)
 
@@ -86,7 +93,7 @@ def analyze(log):
 	plt.close()
 
 # plot frequent ports used coming into router
-	plt.style.use('ggplot')  # 'ggplot' 'classic'
+	plt.style.use('ggplot')
 
 	ax = freq_ports_sorted.plot(kind='bar', color="green", fontsize=10)
 	ax.set_alpha(.2)
@@ -103,7 +110,7 @@ def analyze(log):
 	plt.close()
 
 # plot frequent hostnames coming into router
-	plt.style.use('ggplot')  # 'ggplot' 'classic'
+	plt.style.use('ggplot')
 
 	ax = freq_hostnames_sorted.plot(kind='bar', color="red", fontsize=10)
 	ax.set_alpha(.2)
@@ -119,8 +126,8 @@ def analyze(log):
 	plt.pause(30)
 	plt.close()
 
-	# plot firewall Policy usage
-	plt.style.use('ggplot')  # 'ggplot' 'classic'
+# plot firewall Policy usage
+	plt.style.use('ggplot')
 
 	ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
 	ax.set_alpha(.2)
