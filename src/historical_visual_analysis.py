@@ -1,17 +1,38 @@
-import pandas as pd
-import sqlalchemy as sa
 import matplotlib.pyplot as plt
 import my_secrets
+import logging
+import pandas as pd
 
-engine = sa.create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
+from sqlalchemy import create_engine, exc
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler('../log.log')
+fh.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+
+logger.addHandler(fh)
 
 
+# TODO ADD logging and try/except
 def analyze():
 	"""Takes log analysis data stored in databases and presents information to screen and file"""
+	try:
+		engine = create_engine(
+			"mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost,
+											my_secrets.dbname))
+	except exc.SQLAlchemyError as e:
+		logger.critical(str(e))
+		engine = None
+		exit()
+
 	with engine.connect() as conn, conn.begin():
 		top_countries = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc limit 30;''',
 							con=conn, index_col='COUNTRY')
-		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = 'notfound'
+		nocountry = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = ''
 							or length(country) = 2 group by country order by hits desc;''',
 							con=conn, index_col='COUNTRY')
 		freq_ports = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
@@ -39,6 +60,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries_historical.png', dpi='figure')
+	logger.info(f"Top 15 Historical Source Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -56,6 +78,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/no_countries_historical.png')
+	logger.info(f"No Country Name Historical Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -73,6 +96,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_ports_historical.png')
+	logger.info(f"Top 15 Historical Ports Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -90,6 +114,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_hostnames_historical.png', dpi='figure')
+	logger.info(f"Top 15 Historical HOSTNAMES Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -107,5 +132,6 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/fw_policy_usage_historical.png', dpi='figure')
+	logger.info(f"Historical Firewall POLICY Use Plot Saved")
 	plt.pause(30)
 	plt.close()
