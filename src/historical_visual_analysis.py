@@ -17,7 +17,6 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 
-# TODO ADD logging and try/except
 def analyze():
 	"""Takes log analysis data stored in databases and presents information to screen and file"""
 	try:
