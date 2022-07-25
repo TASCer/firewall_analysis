@@ -44,14 +44,13 @@ def update():
             try:
                 obj = ipwhois.IPWhois(ip)
                 result = obj.lookup_rdap()
-                # logger.info(f"{ip} got a result")
 
             except (UnboundLocalError, ValueError, AttributeError, ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError,
                     ipwhois.ASNParseError, ipwhois.ASNOriginLookupError, ipwhois.ASNRegistryError,
                     ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 result = None
                 error = str(e).split('http:')[0]
-                print("Result Error:", error, type(error))
+                # print("Result Error:", error, type(error))
                 logger.error(f"{error} {ip}")
 
                 conn.execute(f'''update lookup SET country = '{error}' WHERE SOURCE = '{ip}';''')
@@ -71,7 +70,6 @@ def update():
 
             else:
                 country_name = COUNTRIES.get(asn_alpha2)
-                # logger.info(f"{ip} is from {country_name}")
 
             if not country_name:
                 logger.warning("Country Name not found in COUNTRIES, setting it to alpha-2")
@@ -79,11 +77,9 @@ def update():
                 continue
 
             elif "'" in country_name:
-                # logger.info(f"{country_name} has an aposterphe")
                 country_name = country_name.replace("'", "''")
                 logger.warning(f"Apostrophe found in {country_name}")
                 conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
 
             else:
                 conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
-                # logger.info(f"Lookup table was updated {ip} {country_name} ")
