@@ -31,7 +31,7 @@ def update():
 
     with engine.connect() as conn, conn.begin():
         try:
-            sql = '''SELECT source, country from lookup WHERE COUNTRY is Null;'''
+            sql = '''SELECT source, country from lookup WHERE COUNTRY is null;'''  # like '%%HTTP%%'
             lookups = conn.execute(sql)
 
         except exc.SQLAlchemyError as e:
