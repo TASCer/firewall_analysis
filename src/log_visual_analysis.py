@@ -48,7 +48,7 @@ def analyze(log):
 	counter_top_countries = Counter(top_countries)
 
 	try:
-		counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) == 2 or v == 'HTTP lookup failed for' or v == ''}
+		counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) == 2 or k.startswith('HTTP') or k == ''}
 
 	except TypeError as e:
 		print(str(e))
