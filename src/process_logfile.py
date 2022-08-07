@@ -25,7 +25,7 @@ start = time.perf_counter()
 
 
 log_path = my_secrets.logPath
-log_file = r"\Jul24-Jul25.csv"
+log_file = r"\Aug6-Aug7.csv"
 
 exportPath = f"{log_path}{log_file}"
 
@@ -62,7 +62,6 @@ def process_logs():
     return logs
 
 
-# TODO ADD LOGGING. COPY hoainsights
 def tbl_load_activity(cur_log):
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity"""
     try:
@@ -112,19 +111,19 @@ def tbl_load_lookup(unique_ips):
 
 
 if __name__ == "__main__":
-    log = process_logs()
-    logger.info(f'Processed {len(log)} log entries')
-    unique_sources = log.drop_duplicates(subset='SOURCE')
+    parsed_log = process_logs()
+    logger.info(f'Processed {len(parsed_log)} log entries')
+    unique_sources = parsed_log.drop_duplicates(subset='SOURCE')
     unique_sources = unique_sources['SOURCE']
     logger.info(f'{len(unique_sources)} entries had unique source ip')
-    tbl_load_activity(log)
+    tbl_load_activity(parsed_log)
     new_lookup_count = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
-    log_visual_analysis.analyze(log)
-    # historical_visual_analysis.analyze()
+    log_visual_analysis.analyze(parsed_log)
+    historical_visual_analysis.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     logger.info(f'Log Processing and Analysis ENDED for period: {log_file}')
-    send_mail(f"Firewall Analysis COMPLETE: Updated {len(log)} log entries - {len(unique_sources)} unique. \
+    send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
               {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
