@@ -25,11 +25,11 @@ start = time.perf_counter()
 
 
 log_path = my_secrets.logPath
-log_file = r"\Aug6-Aug7.csv"
+log_file = r"\Aug11-Aug12.csv"
 
 exportPath = f"{log_path}{log_file}"
 
-logger.info(f'Log Processing and Analysis STARTED for period: {log_file}')
+logger.info(f'******Log Processing and Analysis STARTED for period: {log_file}******')
 
 
 def process_logs():
@@ -124,6 +124,6 @@ if __name__ == "__main__":
     historical_visual_analysis.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
-    logger.info(f'Log Processing and Analysis ENDED for period: {log_file}')
+    logger.info(f'******Log Processing and Analysis ENDED for period: {log_file}******')
     send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
               {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")

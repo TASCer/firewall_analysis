@@ -77,7 +77,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/no_countries_historical.png')
-	logger.info(f"No Country Name Historical Plot Saved")
+	logger.info(f"No Country Name Found Historical Plot Saved")
 	plt.pause(30)
 	plt.close()
 

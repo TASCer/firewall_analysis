@@ -74,6 +74,7 @@ def analyze(log):
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries.png', dpi='figure')
+	logger.info(f"Top 15 Source Countries Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -89,6 +90,7 @@ def analyze(log):
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/no_countries.png')
+	logger.info(f"No Country Name Found Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -106,6 +108,7 @@ def analyze(log):
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_ports.png')
+	logger.info(f"Top 15 Ports Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -123,6 +126,7 @@ def analyze(log):
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_hostnames.png', dpi='figure')
+	logger.info(f"Top 15 HOSTNAMES Plot Saved")
 	plt.pause(30)
 	plt.close()
 
@@ -140,5 +144,6 @@ def analyze(log):
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/fw_policy_usage.png', dpi='figure')
+	logger.info(f"Firewall POLICY Use Plot Saved")
 	plt.pause(30)
 	plt.close()
