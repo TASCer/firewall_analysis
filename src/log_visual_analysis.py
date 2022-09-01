@@ -18,9 +18,11 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 
-# TODO Analyze current processed log. Tweak Country, add time span to all plots?
-def analyze(log):
+# TODO Non-historical No Country issue: logged error != plot count. Add time span to all plots? Add formatting/colors? to logging
+def analyze(log, timespan):
 	"""Takes cureently processed log and presents information to screen and file"""
+	timespan = timespan.split('.')[0].replace('\\', '')
+	print(timespan)
 	try:
 		engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
 																		my_secrets.dbhost, my_secrets.dbname))
@@ -62,7 +64,7 @@ def analyze(log):
 	plt.style.use('ggplot')
 	x, y = zip(*top_15_countries)
 	plt.bar(x, y)
-	plt.title("TOP SOURCE COUNTRIES", fontsize=10)
+	plt.title(f"TOP SOURCE COUNTRIES For: {timespan}", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
@@ -74,14 +76,14 @@ def analyze(log):
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries.png', dpi='figure')
-	logger.info(f"Top 15 Source Countries Plot Saved")
+	logger.info("Top 15 Source Countries Plot Saved")
 	plt.pause(30)
 	plt.close()
 
 # plot SOURCE where country name cammot be determined
 	plt.style.use('ggplot')
 	plt.bar(counter_no_country_name.keys(), counter_no_country_name.values())
-	plt.title("COUNTRY ALPHA-2 NOT RESOLVED", fontsize=13)
+	plt.title(f"COUNTRY ALPHA-2 NOT RESOLVED For: {timespan}", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -99,7 +101,7 @@ def analyze(log):
 
 	ax = freq_ports_sorted.plot(kind='bar', color="green", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 Destination Ports", fontsize=13)
+	ax.set_title(f"TOP 15 Destination Ports For: {timespan}", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -117,7 +119,7 @@ def analyze(log):
 
 	ax = freq_hostnames_sorted.plot(kind='bar', color="red", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 HOSTNAMES", fontsize=12)
+	ax.set_title(f"TOP 15 HOSTNAMES For: {timespan}", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -135,7 +137,7 @@ def analyze(log):
 
 	ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("Firewall Policies Usage", fontsize=12)
+	ax.set_title(f"Firewall Policies Usage For: {timespan}", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
