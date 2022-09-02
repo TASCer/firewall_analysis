@@ -28,6 +28,7 @@ def analyze():
 		engine = None
 		exit()
 
+	# TODO hostname query takes a long time. groupby.count()?
 	with engine.connect() as conn, conn.begin():
 		top_countries = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc limit 30;''',
 							con=conn, index_col='COUNTRY')
@@ -40,14 +41,20 @@ def analyze():
 							con=conn, index_col='HOSTNAME')
 		firewall_policies = pd.read_sql('''SELECT POLICY, count(POLICY) as hits from activity where POLICY !='WAN_LOCAL-default-D' group by POLICY;''',
 							con=conn, index_col='POLICY')
+		hist_start = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE ASC limit 1;''', con=conn)
+
+		hist_end = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE desc limit 1;''', con=conn)
+
+	hist_start_date = hist_start['DATE'][0]
+	hist_end_date = hist_end['DATE'][0]
+	# print(hist_end_date, type(hist_end_date))
 
 # HISTORICAL - Plot Top 15 SOURCE countrys found accessing firewall
 	plt.style.use('ggplot')
 
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
-	# print(ax)
 	ax.set_alpha(.8)
-	ax.set_title("TOP 15 SOURCE COUNTRIES - HISTORICAL", fontsize=10)
+	ax.set_title(f"TOP 15 SOURCE COUNTRIES - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
@@ -59,16 +66,16 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries_historical.png', dpi='figure')
-	logger.info(f"Top 15 Historical Source Plot Saved")
+	logger.info(f"Top 15 Historical Source Plot Saved ({hist_start_date}  -->  {hist_end_date})")
 	plt.pause(30)
 	plt.close()
 
-# HISTORICAL - Plot country ALPHA-2 codes that cannot map to country name
+# # HISTORICAL - Plot country ALPHA-2 codes that cannot map to country name
 	plt.style.use('ggplot')
 
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL", fontsize=13)
+	ax.set_title(f"COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -81,12 +88,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-# HISTORICAL - Plot frequent ports used coming into router
+# # HISTORICAL - Plot frequent ports used coming into router
 	plt.style.use('ggplot')
 
 	ax = freq_ports.plot(kind='bar', color="green", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 Destination Ports - HISTORICAL", fontsize=13)
+	ax.set_title(f"TOP 15 Destination Ports - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -99,12 +106,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-# HISTORICAL - Plot frequent hostnames coming into router
+# # HISTORICAL - Plot frequent hostnames coming into router
 	plt.style.use('ggplot')
 
 	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("TOP 15 HOSTNAMES - HISTORICAL", fontsize=12)
+	ax.set_title(f"TOP 15 HOSTNAMES - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -117,12 +124,12 @@ def analyze():
 	plt.pause(30)
 	plt.close()
 
-# HISTORICAL - Plot firewall Policy usage
+# # HISTORICAL - Plot firewall Policy usage
 	plt.style.use('ggplot')
 
 	ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title("Firewall Policies Usage - HISTORICAL", fontsize=12)
+	ax.set_title(f"Firewall Policies Usage - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
