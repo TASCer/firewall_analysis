@@ -47,7 +47,6 @@ def analyze():
 
 	hist_start_date = hist_start['DATE'][0]
 	hist_end_date = hist_end['DATE'][0]
-	# print(hist_end_date, type(hist_end_date))
 
 # HISTORICAL - Plot Top 15 SOURCE countrys found accessing firewall
 	plt.style.use('ggplot')

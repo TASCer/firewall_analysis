@@ -18,11 +18,11 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 
-# TODO Non-historical No Country issue: logged error != plot count. Add time span to all plots? Add formatting/colors? to logging
+# TODO Non-historical No Country issue: logged error != plot count.
 def analyze(log, timespan):
 	"""Takes cureently processed log and presents information to screen and file"""
 	timespan = timespan.split('.')[0].replace('\\', '')
-	print(timespan)
+
 	try:
 		engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
 																		my_secrets.dbhost, my_secrets.dbname))
