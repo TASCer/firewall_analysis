@@ -54,7 +54,7 @@ def analyze():
 
 	ax = top_countries[:14].plot(kind='bar', color="indigo", fontsize=8)
 	ax.set_alpha(.8)
-	ax.set_title(f"TOP 15 SOURCE COUNTRIES - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=10)
+	ax.set_title(f"TOP 15 SOURCE COUNTRIES {hist_start_date} - {hist_end_date})", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
@@ -66,7 +66,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_countries_historical.png', dpi='figure')
-	logger.info(f"Top 15 Historical Source Plot Saved ({hist_start_date}  -->  {hist_end_date})")
+	logger.info(f"Top 15 Source Plot Saved ({hist_start_date} - {hist_end_date})")
 	plt.pause(30)
 	plt.close()
 
@@ -75,7 +75,7 @@ def analyze():
 
 	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title(f"COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=13)
+	ax.set_title(f"COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL ({hist_start_date} - {hist_end_date})", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -93,7 +93,7 @@ def analyze():
 
 	ax = freq_ports.plot(kind='bar', color="green", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title(f"TOP 15 Destination Ports - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=13)
+	ax.set_title(f"TOP 15 Destination Ports ({hist_start_date} - {hist_end_date})", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -111,7 +111,7 @@ def analyze():
 
 	ax = freq_hostnames.plot(kind='bar', color="red", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title(f"TOP 15 HOSTNAMES - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=12)
+	ax.set_title(f"TOP 15 HOSTNAMES ({hist_start_date} - {hist_end_date})", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
@@ -129,7 +129,7 @@ def analyze():
 
 	ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
 	ax.set_alpha(.2)
-	ax.set_title(f"Firewall Policies Usage - HISTORICAL ({hist_start_date}  -->  {hist_end_date})", fontsize=12)
+	ax.set_title(f"Firewall Policies Usage ({hist_start_date} - {hist_end_date})", fontsize=12)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 	plt.tight_layout()
