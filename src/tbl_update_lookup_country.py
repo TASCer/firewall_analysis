@@ -50,7 +50,6 @@ def update():
                     ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
                 result = None
                 error = str(e).split('http:')[0]
-                # print("Result Error:", error, type(error))
                 logger.error(f"{error} {ip}")
 
                 conn.execute(f'''update lookup SET country = '{error}' WHERE SOURCE = '{ip}';''')
@@ -59,8 +58,8 @@ def update():
             asn_alpha2 = result['asn_country_code']
 
             if asn_alpha2 is None or asn_alpha2 == '':
-                logger.warning(f"{ip} had no alpha2 code")
-                asn_alpha2 = ''
+                logger.warning(f"{ip} had no alpha2 code, setting country name to 'unknown'")
+                asn_alpha2 = 'unknown'
                 conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
                 continue
 
