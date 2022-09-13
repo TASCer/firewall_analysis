@@ -83,7 +83,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/no_countries_historical.png')
-	logger.info(f"No Country Name Found Historical Plot Saved")
+	logger.info(f"No Country Name Found Historical Plot Saved ({hist_start_date} - {hist_end_date})")
 	plt.pause(30)
 	plt.close()
 
@@ -101,7 +101,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_ports_historical.png')
-	logger.info(f"Top 15 Historical Ports Plot Saved")
+	logger.info(f"Top 15 Historical Ports Plot Saved ({hist_start_date} - {hist_end_date})")
 	plt.pause(30)
 	plt.close()
 
@@ -119,7 +119,7 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/top_hostnames_historical.png', dpi='figure')
-	logger.info(f"Top 15 Historical HOSTNAMES Plot Saved")
+	logger.info(f"Top 15 Historical HOSTNAMES Plot Saved ({hist_start_date} - {hist_end_date})")
 	plt.pause(30)
 	plt.close()
 
@@ -137,6 +137,6 @@ def analyze():
 	mng.window.showMaximized()
 	plt.show(block=False)
 	plt.savefig('../output/fw_policy_usage_historical.png', dpi='figure')
-	logger.info(f"Historical Firewall POLICY Use Plot Saved")
+	logger.info(f"Historical Firewall POLICY Use Plot Saved ({hist_start_date} - {hist_end_date})")
 	plt.pause(30)
 	plt.close()
