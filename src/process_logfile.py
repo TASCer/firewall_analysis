@@ -23,9 +23,8 @@ logger.addHandler(fh)
 
 start = time.perf_counter()
 
-
 log_path = my_secrets.logPath
-log_file = r"\Aug11-Aug12.csv"
+log_file = r"\Sep17-Sep19.csv"
 
 exportPath = f"{log_path}{log_file}"
 
@@ -82,7 +81,6 @@ def tbl_load_activity(cur_log):
                                         "DATE": types.Date,
                                         "TIME": types.TIME(6),
                                         "DPT": types.INT
-                                        # "SOURCE":sa.types.String(length = 15)
                                         }
                                   )
         except exc.SQLAlchemyError as e:
@@ -120,10 +118,10 @@ if __name__ == "__main__":
     new_lookup_count = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
-    log_visual_analysis.analyze(parsed_log)
-    historical_visual_analysis.analyze()
+    log_visual_analysis.analyze(parsed_log, log_file)
+    # historical_visual_analysis.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
-    logger.info(f'******Log Processing and Analysis ENDED for period: {log_file}******')
+    logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
     send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
               {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
