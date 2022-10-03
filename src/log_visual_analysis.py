@@ -41,23 +41,20 @@ def analyze(log, timespan):
 
 # Get countries for currently processed log
 	top_countries = []
+	no_country = []
 	with engine.connect() as conn, conn.begin():
 		for source in sources:
 			get_country = pd.read_sql(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''',
-								con=conn, index_col='COUNTRY')
-			get_country_list = list(get_country.index.values)
-			top_countries.append(get_country_list.pop())
+								con=conn)
+			country = get_country.values[0][0]
+			if len(country) == 2 or country.startswith('HTTP') or country == '' or country == 'unknown':
+				no_country.append(country)
+			top_countries.append(country)
+
 	counter_top_countries = Counter(top_countries)
-
-	try:
-		counter_no_country_name = {k: v for k, v in counter_top_countries.items() if len(k) == 2 or k.startswith('HTTP') or k == ''}
-
-	except TypeError as e:
-		print(str(e))
-		logger.critical(str(e))
-		counter_no_country_name = None
-
+	counter_no_country = Counter(no_country)
 	top_15_countries = counter_top_countries.most_common(15)
+	print(counter_no_country)
 
 
 # Plot Top Countries
@@ -82,7 +79,7 @@ def analyze(log, timespan):
 
 # plot SOURCE where country name cammot be determined
 	plt.style.use('ggplot')
-	plt.bar(counter_no_country_name.keys(), counter_no_country_name.values())
+	plt.bar(counter_no_country.keys(), counter_no_country.values())
 	plt.title(f"COUNTRY ALPHA-2 NOT RESOLVED For: {timespan}", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
