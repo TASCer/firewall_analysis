@@ -31,7 +31,7 @@ def update():
 
     with engine.connect() as conn, conn.begin():
         try:
-            sql = '''SELECT source, country from lookup WHERE COUNTRY is null;'''  # like '%%HTTP%%'
+            sql = '''SELECT source, country from lookup WHERE COUNTRY is null;'''  # like '%%HTTP%%'  = 'unknown'
             lookups = conn.execute(sql)
 
         except exc.SQLAlchemyError as e:
@@ -42,12 +42,13 @@ def update():
         for ip, country in lookups:
             # Try to get a response
             try:
-                obj = ipwhois.IPWhois(ip)
+                obj = ipwhois.IPWhois(ip, timeout=10)
                 result = obj.lookup_rdap()
 
             except (UnboundLocalError, ValueError, AttributeError, ipwhois.BaseIpwhoisException, ipwhois.ASNLookupError,
                     ipwhois.ASNParseError, ipwhois.ASNOriginLookupError, ipwhois.ASNRegistryError,
                     ipwhois.HostLookupError, ipwhois.HTTPLookupError) as e:
+
                 result = None
                 error = str(e).split('http:')[0]
                 logger.error(f"{error} {ip}")
