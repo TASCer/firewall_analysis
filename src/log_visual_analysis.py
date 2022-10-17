@@ -54,7 +54,6 @@ def analyze(log, timespan):
 	counter_top_countries = Counter(top_countries)
 	counter_no_country = Counter(no_country)
 	top_15_countries = counter_top_countries.most_common(15)
-	print(counter_no_country)
 
 
 # Plot Top Countries
