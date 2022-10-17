@@ -24,16 +24,16 @@ logger.addHandler(fh)
 start = time.perf_counter()
 
 log_path = my_secrets.logPath
-log_file = r"\Sep17-Sep19.csv"
+log_file = r"\Oct15-Oct17.csv"
 
-exportPath = f"{log_path}{log_file}"
+export_path = f"{log_path}{log_file}"
 
 logger.info(f'******Log Processing and Analysis STARTED for period: {log_file}******')
 
 
 def process_logs():
     """Takes in a csv log file exported from Syslog Watcher 4.5.2, parses it, and returns a pandas Dataframe"""
-    logs = pd.read_csv(exportPath, sep=",", names=["DOW", "ODATE", "MESSAGE"])
+    logs = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
     logs['YEAR'] = logs["MESSAGE"].apply(lambda st: st[0:5])
     logs["DATE"] = logs["ODATE"] + "," + logs["YEAR"]
     logs['DATE'] = pd.to_datetime(logs['DATE'])
@@ -65,7 +65,7 @@ def tbl_load_activity(cur_log):
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity"""
     try:
         engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
-                                                                        my_secrets.dbhost, my_secrets.dbname))
+                                my_secrets.dbhost, my_secrets.dbname))
 
     except exc.SQLAlchemyError as e:
         engine = None
@@ -103,8 +103,6 @@ def tbl_load_lookup(unique_ips):
         new_lookups = conn.execute('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;''')
         new_lookups_count = tuple(n for n in new_lookups)[0][0]
 
-        logger.info("Lookup table has been inserted with new unique source ips")
-
         return new_lookups_count
 
 
@@ -119,7 +117,7 @@ if __name__ == "__main__":
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
     log_visual_analysis.analyze(parsed_log, log_file)
-    # historical_visual_analysis.analyze()
+    historical_visual_analysis.analyze()
     end = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
