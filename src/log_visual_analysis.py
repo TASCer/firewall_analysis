@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 import matplotlib.pyplot as plt
 import my_secrets
@@ -6,10 +7,13 @@ import pandas as pd
 from collections import Counter
 from sqlalchemy import create_engine, exc
 
+now = dt.datetime.now()
+todays_date = now.strftime('%D').replace('/', '-')
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-fh = logging.FileHandler('../log.log')
+fh = logging.FileHandler(f'../log_{todays_date}.log')
 fh.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

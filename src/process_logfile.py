@@ -10,10 +10,13 @@ import time
 from mailer import send_mail
 from sqlalchemy import create_engine, exc, types
 
+now = dt.datetime.now()
+todays_date = now.strftime('%D').replace('/', '-')
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-fh = logging.FileHandler('../log.log')
+fh = logging.FileHandler(f'../log_{todays_date}.log')
 fh.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,10 +24,14 @@ fh.setFormatter(formatter)
 
 logger.addHandler(fh)
 
+now = dt.datetime.now()
+todays_date = now.strftime('%D').replace('/', '-')
+
+
 start = time.perf_counter()
 
 log_path = my_secrets.logPath
-log_file = r"\Oct15-Oct17.csv"
+log_file = r"\Dec3-Dec5.csv"
 
 export_path = f"{log_path}{log_file}"
 
@@ -33,7 +40,10 @@ logger.info(f'******Log Processing and Analysis STARTED for period: {log_file}**
 
 def process_logs():
     """Takes in a csv log file exported from Syslog Watcher 4.5.2, parses it, and returns a pandas Dataframe"""
-    logs = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
+    try:
+        logs = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
+    except FileNotFoundError as e:
+        logger.exception(e)
     logs['YEAR'] = logs["MESSAGE"].apply(lambda st: st[0:5])
     logs["DATE"] = logs["ODATE"] + "," + logs["YEAR"]
     logs['DATE'] = pd.to_datetime(logs['DATE'])
@@ -57,7 +67,7 @@ def process_logs():
     logs = logs[~logs['SOURCE'].str.contains(':')]
     del logs["MESSAGE"]
 
-    logger.info(f"Logs for the period {log_file} have been processed")
+    logger.info(f"{len(logs)} logs for the period {log_file} have been processed")
     return logs
 
 
@@ -108,7 +118,6 @@ def tbl_load_lookup(unique_ips):
 
 if __name__ == "__main__":
     parsed_log = process_logs()
-    logger.info(f'Processed {len(parsed_log)} log entries')
     unique_sources = parsed_log.drop_duplicates(subset='SOURCE')
     unique_sources = unique_sources['SOURCE']
     logger.info(f'{len(unique_sources)} entries had unique source ip')
