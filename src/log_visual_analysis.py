@@ -1,3 +1,4 @@
+# TODO NO COUNTRY plot not adding up. Showing far more than log shows
 import datetime as dt
 import logging
 import matplotlib.pyplot as plt
