@@ -42,8 +42,12 @@ def process_logs():
     """Takes in a csv log file exported from Syslog Watcher 4.5.2, parses it, and returns a pandas Dataframe"""
     try:
         logs = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
+
     except FileNotFoundError as e:
         logger.exception(e)
+        logs = None
+        exit()
+
     logs['YEAR'] = logs["MESSAGE"].apply(lambda st: st[0:5])
     logs["DATE"] = logs["ODATE"] + "," + logs["YEAR"]
     logs['DATE'] = pd.to_datetime(logs['DATE'])
