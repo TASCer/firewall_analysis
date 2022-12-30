@@ -1,4 +1,4 @@
 my_secrets.py
 .idea
-log.log
+log_.*
 output/
