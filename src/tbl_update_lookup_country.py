@@ -1,3 +1,4 @@
+# TODO Try async??
 import datetime as dt
 import ipwhois
 import logging
@@ -87,3 +88,39 @@ def update():
 
             else:
                 conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
+
+# async def get_country_name(client: aihttp.Ret, sem, url):
+#     """ Takes in an api client, semaphore, and ip to get latest parcel data
+#         Returns a dictionary
+#     """
+#     try:
+#         async with sem, client.get(url) as resp:
+#             parcel_details = await resp.json(encoding='UTF-8', content_type='application/json')
+#             return parcel_details
+#
+#     except (json.JSONDecodeError, aiohttp.client.ClientOSError, aiohttp.client.ContentTypeError,
+#             aiohttp.ClientResponseError, TypeError) as e:
+#         await asyncio.sleep(4)
+#         async with sem, client.get(url) as resp:
+#             parcel_details = await resp.json(encoding='UTF-8', content_type='application/json')
+#
+#         return parcel_details
+#
+#
+# async def async_main(new_lookups: list):
+#     """ Takes in a list of all APN's for all parcels in a community, creates API connection and client
+#         Iterates through list of APN's creating get_parcel_details tasks
+#         Returns a list of dictionaries for all parcels in a community
+#     """
+#     connector = TCPConnector(ssl=False, limit=20, limit_per_host=20, enable_cleanup_closed=False)
+#     async with RetryClient(headers=API_HEADER, connector=connector, raise_for_status=False,
+#                            retry_options=ExponentialRetry(attempts=3)) as retry_client:
+#         sem = asyncio.Semaphore(20)
+#         tasks = []
+#         for apn in APNs:
+#             parcel_url = f'https://mcassessor.maricopa.gov/parcel/{apn}'
+#             tasks.append(asyncio.create_task(get_parcel_details(retry_client, sem, parcel_url)))
+#
+#         parcels = await asyncio.gather(*tasks, return_exceptions=True)
+#
+#         return parcels
