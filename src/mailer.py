@@ -22,7 +22,7 @@ exchange_password = my_secrets.exchange_password
 sent_from = exchange_user
 
 
-def send_mail(subject, text):
+def send_mail(subject: str, text: str) -> None:
     """Takes in strings for email subject and contents and sends the email"""
     message = 'Subject: {}\n\n{}'.format(subject, text)
     try:

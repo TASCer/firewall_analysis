@@ -27,11 +27,10 @@ logger.addHandler(fh)
 now = dt.datetime.now()
 todays_date = now.strftime('%D').replace('/', '-')
 
-
 start = time.perf_counter()
 
 log_path = my_secrets.logPath
-log_file = r"\Dec3-Dec5.csv"
+log_file = r"\Dec30-Dec31.csv"
 
 export_path = f"{log_path}{log_file}"
 
@@ -75,7 +74,7 @@ def process_logs():
     return logs
 
 
-def tbl_load_activity(cur_log):
+def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity"""
     try:
         engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
@@ -103,7 +102,7 @@ def tbl_load_activity(cur_log):
     logger.info("Activity database has been appended with new logs")
 
 
-def tbl_load_lookup(unique_ips):
+def tbl_load_lookup(unique_ips: list) -> int:
     """Takes distinct ip addresses from processed logs and INSERTS the MySQL database: lookup"""
     engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
     with engine.connect() as conn, conn.begin():
