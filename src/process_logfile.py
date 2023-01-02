@@ -30,7 +30,7 @@ todays_date = now.strftime('%D').replace('/', '-')
 start = time.perf_counter()
 
 log_path = my_secrets.logPath
-log_file = r"\Dec30-Dec31.csv"
+log_file = r"\Jan1-Jan2.csv"
 
 export_path = f"{log_path}{log_file}"
 
@@ -86,20 +86,30 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
 
     with engine.connect() as conn, conn.begin():
         try:
-            return cur_log.to_sql(name='activity',
-                                  con=conn,
-                                  if_exists='append',
-                                  index=False,
-                                  dtype={
-                                        "DATE": types.Date,
-                                        "TIME": types.TIME(6),
-                                        "DPT": types.INT
-                                        }
-                                  )
+            cur_log.to_sql(name='activity',
+                        con=conn,
+                        if_exists='append',
+                        index=False,
+                        dtype={
+                            "DATE": types.Date,
+                            "TIME": types.TIME(6),
+                            "DPT": types.INT,
+                            'DoNotFragment': types.BOOLEAN,
+                            'DOW': types.VARCHAR(8)
+                              }
+                           )
         except exc.SQLAlchemyError as e:
             logger.exception(str(e))
 
-    logger.info("Activity database has been appended with new logs")
+        try:
+            conn.execute('CREATE INDEX idx_dpt ON activity(DPT);')
+            conn.execute('CREATE INDEX idx_date ON activity(DATE);')
+            conn.execute('CREATE INDEX idx_dow ON activity(DOW);')
+
+        except exc.SQLAlchemyError as e:
+            logger.exception(str(e))
+
+        logger.info("Activity database has been appended with new logs")
 
 
 def tbl_load_lookup(unique_ips: list) -> int:
