@@ -130,17 +130,21 @@ def analyze():
 # # HISTORICAL - Plot firewall Policy usage
 	plt.style.use('ggplot')
 
-	ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
-	ax.set_alpha(.2)
-	ax.set_title(f"Firewall Policies Usage ({hist_start_date} - {hist_end_date})", fontsize=12)
+	try:
+		ax = firewall_policies.plot(kind='bar', color="orange", fontsize=10)
+		ax.set_alpha(.2)
+		ax.set_title(f"Firewall Policies Usage ({hist_start_date} - {hist_end_date})", fontsize=12)
 
-	plt.xticks(rotation=35, ha='right', va='center_baseline')
-	plt.tight_layout()
+		plt.xticks(rotation=35, ha='right', va='center_baseline')
+		plt.tight_layout()
 
-	mng = plt.get_current_fig_manager()
-	mng.window.showMaximized()
-	plt.show(block=False)
-	plt.savefig('../output/fw_policy_usage_historical.png', dpi='figure')
-	logger.info(f"Historical Firewall POLICY Use Plot Saved ({hist_start_date} - {hist_end_date})")
-	plt.pause(30)
-	plt.close()
+		mng = plt.get_current_fig_manager()
+		mng.window.showMaximized()
+		plt.show(block=False)
+		plt.savefig('../output/fw_policy_usage_historical.png', dpi='figure')
+		logger.info(f"Historical Firewall POLICY Use Plot Saved ({hist_start_date} - {hist_end_date})")
+		plt.pause(30)
+		plt.close()
+
+	except TypeError as e:
+		logger.error(str(e))
