@@ -8,7 +8,7 @@ import tbl_update_lookup_country
 import time
 
 from mailer import send_mail
-from sqlalchemy import create_engine, exc, types
+from sqlalchemy import create_engine, exc
 
 now = dt.datetime.now()
 todays_date = now.strftime('%D').replace('/', '-')
@@ -85,7 +85,6 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
         engine = None
         logger.exception(str(e))
 
-
     with engine.connect() as conn, conn.begin():
 
         try:
@@ -100,24 +99,9 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
                         con=conn,
                         if_exists='append',
                         index=False,
-                        dtype={
-                            "DATE": types.Date,
-                            "TIME": types.TIME(6),
-                            "DPT": types.INT,
-                            'DoNotFragment': types.BOOLEAN,
-                            'DOW': types.VARCHAR(9)
-                              }
                            )
         except exc.SQLAlchemyError as e:
             logger.exception(str(e))
-        # Receiving dupe errors - Monitor
-        # try:
-        #     conn.execute('CREATE INDEX idx_dpt ON activity(DPT);')
-        #     conn.execute('CREATE INDEX idx_date ON activity(DATE);')
-        #     conn.execute('CREATE INDEX idx_dow ON activity(DOW);')
-        #
-        # except exc.SQLAlchemyError as e:
-        #     logger.exception(str(e))
 
         logger.info("Activity database has been appended with new logs")
 
@@ -148,10 +132,10 @@ if __name__ == "__main__":
     new_lookup_count = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
-    # log_visual_analysis.analyze(parsed_log, log_file)
-    # historical_visual_analysis.analyze()
-    # end = time.perf_counter()
-    # elapsedTime = dt.timedelta(seconds=int(end - start))
-    # logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
-    # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
-    #           {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
+    log_visual_analysis.analyze(parsed_log, log_file)
+    historical_visual_analysis.analyze()
+    end = time.perf_counter()
+    elapsedTime = dt.timedelta(seconds=int(end - start))
+    logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
+    send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
+              {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
