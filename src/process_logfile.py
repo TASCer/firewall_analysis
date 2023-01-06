@@ -30,7 +30,7 @@ todays_date = now.strftime('%D').replace('/', '-')
 start = time.perf_counter()
 
 log_path = my_secrets.logPath
-log_file = r"\Jan1-Jan2.csv"
+log_file = r"\Jan3-Jan6.csv"
 
 export_path = f"{log_path}{log_file}"
 
@@ -76,6 +76,7 @@ def process_logs():
 
 def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity"""
+
     try:
         engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
                                 my_secrets.dbhost, my_secrets.dbname))
@@ -84,7 +85,16 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
         engine = None
         logger.exception(str(e))
 
+
     with engine.connect() as conn, conn.begin():
+
+        try:
+            create_activity_tbl = "CREATE TABLE if not exists activity (id INT auto_increment, DOW varchar(9), DATE date, TIME time(6), POLICY varchar(100), PROTOCOL varchar(20), SOURCE varchar(15), DPT int, DoNotFragment BOOLEAN, HOSTNAME varchar(120), primary key(id));"
+            engine.execute(create_activity_tbl)
+
+        except exc.SQLAlchemyError as e:
+            logger.exception(str(e))
+
         try:
             cur_log.to_sql(name='activity',
                         con=conn,
@@ -95,19 +105,19 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
                             "TIME": types.TIME(6),
                             "DPT": types.INT,
                             'DoNotFragment': types.BOOLEAN,
-                            'DOW': types.VARCHAR(8)
+                            'DOW': types.VARCHAR(9)
                               }
                            )
         except exc.SQLAlchemyError as e:
             logger.exception(str(e))
-
-        try:
-            conn.execute('CREATE INDEX idx_dpt ON activity(DPT);')
-            conn.execute('CREATE INDEX idx_date ON activity(DATE);')
-            conn.execute('CREATE INDEX idx_dow ON activity(DOW);')
-
-        except exc.SQLAlchemyError as e:
-            logger.exception(str(e))
+        # Receiving dupe errors - Monitor
+        # try:
+        #     conn.execute('CREATE INDEX idx_dpt ON activity(DPT);')
+        #     conn.execute('CREATE INDEX idx_date ON activity(DATE);')
+        #     conn.execute('CREATE INDEX idx_dow ON activity(DOW);')
+        #
+        # except exc.SQLAlchemyError as e:
+        #     logger.exception(str(e))
 
         logger.info("Activity database has been appended with new logs")
 
@@ -138,10 +148,10 @@ if __name__ == "__main__":
     new_lookup_count = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
-    log_visual_analysis.analyze(parsed_log, log_file)
-    historical_visual_analysis.analyze()
-    end = time.perf_counter()
-    elapsedTime = dt.timedelta(seconds=int(end - start))
-    logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
-    send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
-              {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
+    # log_visual_analysis.analyze(parsed_log, log_file)
+    # historical_visual_analysis.analyze()
+    # end = time.perf_counter()
+    # elapsedTime = dt.timedelta(seconds=int(end - start))
+    # logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
+    # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
+    #           {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
