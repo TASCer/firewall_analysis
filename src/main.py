@@ -30,7 +30,7 @@ todays_date = now.strftime('%D').replace('/', '-')
 start = time.perf_counter()
 
 log_path = my_secrets.logPath
-log_file = r"\Jan3-Jan6.csv"
+log_file = r"\Jan23-Jan25.csv"
 
 export_path = f"{log_path}{log_file}"
 
