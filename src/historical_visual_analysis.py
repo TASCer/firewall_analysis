@@ -76,9 +76,9 @@ def analyze():
 # # HISTORICAL - Plot country ALPHA-2 codes that cannot map to country name
 	plt.style.use('ggplot')
 
-	ax = nocountry.plot(kind='bar', color="blue", fontsize=10)
+	ax = nocountry.plot(kind='bar', color="blue", fontsize=8)
 	ax.set_alpha(.2)
-	ax.set_title(f"COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL ({hist_start_date} - {hist_end_date})", fontsize=13)
+	ax.set_title(f"COUNTRY ALPHA-2 NOT RESOLVED - HISTORICAL ({hist_start_date} - {hist_end_date})", fontsize=10)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()
