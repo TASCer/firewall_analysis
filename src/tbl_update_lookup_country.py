@@ -35,7 +35,7 @@ def update():
 
     with engine.connect() as conn, conn.begin():
         try:
-            sql = '''SELECT source, country from lookup WHERE COUNTRY is null;'''  # like '%%HTTP%%'  = 'unknown'
+            sql = '''SELECT source, country from lookup WHERE COUNTRY is null or COUNTRY like '%%HTTP%%';'''  # like '%%HTTP%%' or COUNTRY = 'ZZ' or COUNTRY = 'unknown'
             lookups = conn.execute(sql)
 
         except exc.SQLAlchemyError as e:
@@ -61,7 +61,7 @@ def update():
                 continue
 
             asn_alpha2 = result['asn_country_code']
-
+            logger.debug(asn_alpha2)
             if asn_alpha2 is None or asn_alpha2 == '':
                 logger.warning(f"{ip} had no alpha2 code, setting country name to 'unknown'")
                 asn_alpha2 = 'unknown'
