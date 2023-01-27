@@ -147,4 +147,4 @@ def analyze():
 		plt.close()
 
 	except TypeError as e:
-		logger.error(str(e))
+		logger.error(str(e) + "for other policies besides DROP")
