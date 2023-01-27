@@ -3,3 +3,4 @@ my_secrets.py
 /log_*.log
 output/
 /log_12-31-22.log
+/sample/
