@@ -7,40 +7,47 @@ import pandas as pd
 import tbl_update_lookup_country
 import time
 
+from datetime import datetime
+from logging import Logger, Formatter
 from mailer import send_mail
+from pandas import Series, DataFrame
+from pandas.core.generic import NDFrame
+from pandas.io.parsers import TextFileReader
 from sqlalchemy import create_engine, exc
+from sqlalchemy.engine import Engine
+from typing import Union, Any
 
-now = dt.datetime.now()
-todays_date = now.strftime('%D').replace('/', '-')
+now: datetime = dt.datetime.now()
+todays_date: str = now.strftime('%D').replace('/', '-')
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+root_logger: Logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
 
 fh = logging.FileHandler(f'../log_{todays_date}.log')
 fh.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter: Formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 
-logger.addHandler(fh)
+root_logger.addHandler(fh)
 
 now = dt.datetime.now()
 todays_date = now.strftime('%D').replace('/', '-')
 
-start = time.perf_counter()
+start: float = time.perf_counter()
 
-log_path = my_secrets.logPath
-log_file = r"\Jan23-Jan25.csv"
+log_path: str = my_secrets.logPath
+log_file: str = r"\Feb22-Feb23.csv"
 
-export_path = f"{log_path}{log_file}"
-
-logger.info(f'******Log Processing and Analysis STARTED for period: {log_file}******')
+export_path: str = f"{log_path}{log_file}"
 
 
-def process_logs():
+def process_logs() -> DataFrame:
     """Takes in a csv log file exported from Syslog Watcher 4.5.2, parses it, and returns a pandas Dataframe"""
+    logger.info(f'******Log Processing and Analysis STARTED for period: {log_file}******')
+
     try:
-        logs = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
+        logs: Union[Union[TextFileReader, Series, DataFrame, None, NDFrame], Any] = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
 
     except FileNotFoundError as e:
         logger.exception(e)
@@ -75,10 +82,12 @@ def process_logs():
 
 
 def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
-    """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity"""
+    """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity
+    :param cur_log: 
+    """
 
     try:
-        engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
+        engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
                                 my_secrets.dbhost, my_secrets.dbname))
 
     except exc.SQLAlchemyError as e:
@@ -88,7 +97,7 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
     with engine.connect() as conn, conn.begin():
 
         try:
-            create_activity_tbl = "CREATE TABLE if not exists activity (id INT auto_increment, DOW varchar(9), DATE date, TIME time(6), POLICY varchar(100), PROTOCOL varchar(20), SOURCE varchar(15), DPT int, DoNotFragment BOOLEAN, HOSTNAME varchar(120), primary key(id));"
+            create_activity_tbl: str = "CREATE TABLE if not exists activity (id INT auto_increment, DOW varchar(9), DATE date, TIME time(6), POLICY varchar(100), PROTOCOL varchar(20), SOURCE varchar(15), DPT int, DoNotFragment BOOLEAN, HOSTNAME varchar(120), primary key(id));"
             engine.execute(create_activity_tbl)
 
         except exc.SQLAlchemyError as e:
@@ -108,33 +117,34 @@ def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
 
 def tbl_load_lookup(unique_ips: list) -> int:
     """Takes distinct ip addresses from processed logs and INSERTS the MySQL database: lookup"""
-    engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
+    engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
     with engine.connect() as conn, conn.begin():
-        create_lookup = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15), COUNTRY CHAR(100), PRIMARY KEY (SOURCE))"
+        create_lookup: str = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15), COUNTRY CHAR(100), PRIMARY KEY (SOURCE))"
         conn.execute(create_lookup)
 
         for ip in unique_ips:
-            sql_inserts = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
+            sql_inserts: str = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
             conn.execute(sql_inserts)
 
         new_lookups = conn.execute('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;''')
-        new_lookups_count = tuple(n for n in new_lookups)[0][0]
+        new_lookups_count: object = tuple(n for n in new_lookups)[0][0]
 
         return new_lookups_count
 
 
 if __name__ == "__main__":
-    parsed_log = process_logs()
-    unique_sources = parsed_log.drop_duplicates(subset='SOURCE')
-    unique_sources = unique_sources['SOURCE']
+    logger: Logger = logging.getLogger(__name__)
+    parsed_log: DataFrame = process_logs()
+    unique_sources: DataFrame = parsed_log.drop_duplicates(subset='SOURCE')
+    unique_sources: DataFrame = unique_sources['SOURCE']
     logger.info(f'{len(unique_sources)} entries had unique source ip')
     tbl_load_activity(parsed_log)
-    new_lookup_count = tbl_load_lookup(unique_sources)
+    new_lookup_count: int = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
     log_visual_analysis.analyze(parsed_log, log_file)
     historical_visual_analysis.analyze()
-    end = time.perf_counter()
+    end: float = time.perf_counter()
     elapsedTime = dt.timedelta(seconds=int(end - start))
     logger.info(f'------Log Processing and Analysis ENDED for period: {log_file}------')
     send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \

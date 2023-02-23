@@ -6,30 +6,25 @@ import my_secrets
 import pandas as pd
 
 from collections import Counter
+from pandas import DataFrame, Series
+from pandas.core.generic import NDFrame
 from sqlalchemy import create_engine, exc
+from sqlalchemy.engine import Engine
+from typing import Union, Any, List, Iterator, Tuple
 
 now = dt.datetime.now()
 todays_date = now.strftime('%D').replace('/', '-')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-fh = logging.FileHandler(f'../log_{todays_date}.log')
-fh.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-
-logger.addHandler(fh)
 
 
 # TODO Non-historical No Country issue: logged error != plot count.
-def analyze(log, timespan):
+def analyze(log: pd.DataFrame, timespan: str) -> object:
 	"""Takes cureently processed log and presents information to screen and file"""
-	timespan = timespan.split('.')[0].replace('\\', '')
+	timespan: str = timespan.split('.')[0].replace('\\', '')
 
 	try:
-		engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
+		engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
 																		my_secrets.dbhost, my_secrets.dbname))
 
 	except exc.SQLAlchemyError as e:
@@ -37,35 +32,35 @@ def analyze(log, timespan):
 		engine = None
 		exit()
 
-	freq_ports = log.groupby(['DPT']).size()
-	freq_ports_sorted = freq_ports.sort_values(ascending=False).head(15)
-	freq_hostnames = log.groupby(['HOSTNAME']).size()
-	freq_hostnames_sorted = freq_hostnames.sort_values(ascending=False).head(15)
-	firewall_policies = log.groupby(['POLICY']).size()
-	sources = log['SOURCE']
+	freq_ports: Union[DataFrame, Series] = log.groupby(['DPT']).size()
+	freq_ports_sorted: Union[Union[DataFrame, None, Series], Any] = freq_ports.sort_values(ascending=False).head(15)
+	freq_hostnames: Union[DataFrame, Series] = log.groupby(['HOSTNAME']).size()
+	freq_hostnames_sorted: Union[Union[DataFrame, None, Series], Any] = freq_hostnames.sort_values(ascending=False).head(15)
+	firewall_policies: Union[DataFrame, Series] = log.groupby(['POLICY']).size()
+	sources: Union[Union[Series, DataFrame, None, NDFrame], Any] = log['SOURCE']
 
 # Get countries for currently processed log
-	top_countries = []
-	no_country = []
+	top_countries: List[Any] = []
+	no_country: List[Any] = []
 	with engine.connect() as conn, conn.begin():
 		for source in sources:
-			get_country = pd.read_sql(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''',
+			get_country: Union[Iterator[DataFrame], DataFrame] = pd.read_sql(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''',
 								con=conn)
-			country = get_country.values[0][0]
+			country: str = get_country.values[0][0]
 			if len(country) == 2 or country.startswith('HTTP') or country == '' or country == 'unknown':
 				no_country.append(country)
 			top_countries.append(country)
 
-	counter_top_countries = Counter(top_countries)
-	counter_no_country = Counter(no_country)
-	top_15_countries = counter_top_countries.most_common(15)
+	counter_top_countries: Counter[Any] = Counter(top_countries)
+	counter_no_country: Counter[Any] = Counter(no_country)
+	top_15_countries: List[Tuple[Any, int]] = counter_top_countries.most_common(15)
 
 
 # Plot Top Countries
 	plt.style.use('ggplot')
 	x, y = zip(*top_15_countries)
 	plt.bar(x, y)
-	plt.title(f"TOP SOURCE COUNTRIES For: {timespan}", fontsize=10)
+	plt.title(f"TOP SOURCE COUNTRIES - {timespan}", fontsize=10)
 
 	plt.xticks(rotation=35, ha='right', va='center_baseline')
 
@@ -84,7 +79,7 @@ def analyze(log, timespan):
 # plot SOURCE where country name cammot be determined
 	plt.style.use('ggplot')
 	plt.bar(counter_no_country.keys(), counter_no_country.values())
-	plt.title(f"COUNTRY ALPHA-2 NOT RESOLVED For: {timespan}", fontsize=13)
+	plt.title(f"COUNTRY ALPHA-2 NOT RESOLVED - {timespan}", fontsize=13)
 
 	plt.xticks(rotation=45, ha='right', va='center_baseline')
 	plt.tight_layout()

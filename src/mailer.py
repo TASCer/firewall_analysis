@@ -1,32 +1,27 @@
 import datetime as dt
 import logging
+from datetime import datetime
+from logging import Logger
+from smtplib import SMTP
+
 import my_secrets
 import smtplib
 
-now = dt.datetime.now()
-todays_date = now.strftime('%D').replace('/', '-')
+now: datetime = dt.datetime.now()
+todays_date: str = now.strftime('%D').replace('/', '-')
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger: Logger = logging.getLogger(__name__)
 
-fh = logging.FileHandler(f'../log_{todays_date}.log')
-fh.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-
-logger.addHandler(fh)
-
-exchange_user = my_secrets.exchange_user
-exchange_password = my_secrets.exchange_password
-sent_from = exchange_user
+exchange_user: str = my_secrets.exchange_user
+exchange_password: str = my_secrets.exchange_password
+sent_from: str = exchange_user
 
 
 def send_mail(subject: str, text: str) -> None:
     """Takes in strings for email subject and contents and sends the email"""
-    message = 'Subject: {}\n\n{}'.format(subject, text)
+    message: str = 'Subject: {}\n\n{}'.format(subject, text)
     try:
-        server = smtplib.SMTP('{}'.format(my_secrets.mailserver), 25)
+        server: SMTP = smtplib.SMTP('{}'.format(my_secrets.mailserver), 25)
         if server:
             server.ehlo()
             server.sendmail(sent_from, my_secrets.to, message)
