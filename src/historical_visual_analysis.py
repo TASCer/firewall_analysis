@@ -31,20 +31,20 @@ def analyze():
 
 	# TODO hostname query takes a long time. groupby.count()?
 	with engine.connect() as conn, conn.begin():
-		top_countries: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc limit 30;''',
+		top_countries: DataFrame = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup group by COUNTRY order by hits desc limit 30;''',
 							con=conn, index_col='COUNTRY')
-		nocountry: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = ''
+		nocountry: DataFrame = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country is null or country = ''
 							or length(country) = 2 or country like '%%HTTP%%' or country = 'unknown' group by country order by hits desc;''',
 							con=conn, index_col='COUNTRY')
-		freq_ports: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
+		freq_ports: DataFrame = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT order by hits desc limit 15;''',
 							con=conn, index_col='DPT')
-		freq_hostnames: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''',
+		freq_hostnames: DataFrame = pd.read_sql('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''',
 							con=conn, index_col='HOSTNAME')
-		firewall_policies: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT POLICY, count(POLICY) as hits from activity where POLICY !='WAN_LOCAL-default-D' group by POLICY;''',
+		firewall_policies: DataFrame = pd.read_sql('''SELECT POLICY, count(POLICY) as hits from activity where POLICY !='WAN_LOCAL-default-D' group by POLICY;''',
 							con=conn, index_col='POLICY')
-		hist_start: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE ASC limit 1;''', con=conn)
+		hist_start: DataFrame = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE ASC limit 1;''', con=conn)
 
-		hist_end: Union[Iterator[DataFrame], DataFrame] = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE desc limit 1;''', con=conn)
+		hist_end: DataFrame = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE desc limit 1;''', con=conn)
 
 	hist_start_date: str = hist_start['DATE'][0]
 	hist_end_date: str = hist_end['DATE'][0]

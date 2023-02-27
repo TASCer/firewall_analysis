@@ -6,20 +6,21 @@ import my_secrets
 import pandas as pd
 
 from collections import Counter
+from datetime import datetime
 from pandas import DataFrame, Series
 from pandas.core.generic import NDFrame
 from sqlalchemy import create_engine, exc
 from sqlalchemy.engine import Engine
 from typing import Union, Any, List, Iterator, Tuple
 
-now = dt.datetime.now()
-todays_date = now.strftime('%D').replace('/', '-')
+now: datetime = dt.datetime.now()
+todays_date: str = now.strftime('%D').replace('/', '-')
 
 logger = logging.getLogger(__name__)
 
 
 # TODO Non-historical No Country issue: logged error != plot count.
-def analyze(log: pd.DataFrame, timespan: str) -> object:
+def analyze(log: DataFrame, timespan: str):
 	"""Takes cureently processed log and presents information to screen and file"""
 	timespan: str = timespan.split('.')[0].replace('\\', '')
 
@@ -37,23 +38,23 @@ def analyze(log: pd.DataFrame, timespan: str) -> object:
 	freq_hostnames: Union[DataFrame, Series] = log.groupby(['HOSTNAME']).size()
 	freq_hostnames_sorted: Union[Union[DataFrame, None, Series], Any] = freq_hostnames.sort_values(ascending=False).head(15)
 	firewall_policies: Union[DataFrame, Series] = log.groupby(['POLICY']).size()
-	sources: Union[Union[Series, DataFrame, None, NDFrame], Any] = log['SOURCE']
+	sources: DataFrame = log['SOURCE']
 
 # Get countries for currently processed log
-	top_countries: List[Any] = []
-	no_country: List[Any] = []
+	top_countries: List[str] = []
+	no_country: List[str] = []
 	with engine.connect() as conn, conn.begin():
 		for source in sources:
-			get_country: Union[Iterator[DataFrame], DataFrame] = pd.read_sql(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''',
+			get_country: DataFrame = pd.read_sql(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''',
 								con=conn)
 			country: str = get_country.values[0][0]
 			if len(country) == 2 or country.startswith('HTTP') or country == '' or country == 'unknown':
 				no_country.append(country)
 			top_countries.append(country)
 
-	counter_top_countries: Counter[Any] = Counter(top_countries)
-	counter_no_country: Counter[Any] = Counter(no_country)
-	top_15_countries: List[Tuple[Any, int]] = counter_top_countries.most_common(15)
+	counter_top_countries: Counter[str] = Counter(top_countries)
+	counter_no_country: Counter[str] = Counter(no_country)
+	top_15_countries: List[Tuple[str, int]] = counter_top_countries.most_common(15)
 
 
 # Plot Top Countries
