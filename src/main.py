@@ -31,13 +31,13 @@ fh.setFormatter(formatter)
 
 root_logger.addHandler(fh)
 
-now = dt.datetime.now()
-todays_date = now.strftime('%D').replace('/', '-')
+now: datetime = dt.datetime.now()
+todays_date: str = now.strftime('%D').replace('/', '-')
 
 start: float = time.perf_counter()
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Feb22-Feb23.csv"
+log_file: str = r"\Apr28-May1.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -47,10 +47,10 @@ def process_logs() -> DataFrame:
     logger.info(f'******Log Processing and Analysis STARTED for period: {log_file}******')
 
     try:
-        logs: Union[Union[TextFileReader, Series, DataFrame, None, NDFrame], Any] = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
+        logs: DataFrame = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
 
     except FileNotFoundError as e:
-        logger.exception(e)
+        logger.error(e)
         logs = None
         exit()
 
@@ -81,7 +81,7 @@ def process_logs() -> DataFrame:
     return logs
 
 
-def tbl_load_activity(cur_log: pd.DataFrame) -> pd.DataFrame:
+def tbl_load_activity(cur_log: DataFrame) -> pd.DataFrame:
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity
     :param cur_log: 
     """
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     logger: Logger = logging.getLogger(__name__)
     parsed_log: DataFrame = process_logs()
     unique_sources: DataFrame = parsed_log.drop_duplicates(subset='SOURCE')
-    unique_sources: DataFrame = unique_sources['SOURCE']
+    unique_sources: NDFrame = unique_sources['SOURCE']
     logger.info(f'{len(unique_sources)} entries had unique source ip')
     tbl_load_activity(parsed_log)
     new_lookup_count: int = tbl_load_lookup(unique_sources)
