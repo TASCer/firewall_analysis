@@ -51,11 +51,9 @@ def analyze(log: DataFrame, timespan: str):
 			if len(country) == 2 or country.startswith('HTTP') or country == '' or country == 'unknown':
 				no_country.append(country)
 			top_countries.append(country)
-
 	counter_top_countries: Counter[str] = Counter(top_countries)
 	counter_no_country: Counter[str] = Counter(no_country)
 	top_15_countries: List[Tuple[str, int]] = counter_top_countries.most_common(15)
-
 
 # Plot Top Countries
 	plt.style.use('ggplot')
