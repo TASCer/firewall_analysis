@@ -34,17 +34,15 @@ root_logger.addHandler(fh)
 now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
-start: float = time.perf_counter()
-
 log_path: str = my_secrets.logPath
-log_file: str = r"\May16-May19.csv"
+log_file: str = r"\Aug17-Aug21.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
 
 def process_logs() -> DataFrame:
     """Takes in a csv log file exported from Syslog Watcher 4.5.2, parses it, and returns a pandas Dataframe"""
-    logger.info(f'\t**  Log Processing and Analysis STARTED for period: {log_file[1:].upper().split(".")[0]}\t  **')
+    logger.info(f'\t**  Log Processing and Analysis STARTED for period: {log_file[1:].upper().split(".")[0]}\t**')
 
     try:
         logs: DataFrame = pd.read_csv(export_path, sep=",", names=["DOW", "ODATE", "MESSAGE"])
@@ -76,8 +74,8 @@ def process_logs() -> DataFrame:
     logs["SOURCE"] = logs["SOURCE"].apply(lambda st: st.replace(' ', ''))
     logs = logs[~logs['SOURCE'].str.contains(':')]
     del logs["MESSAGE"]
+    logger.info(f"{len(logs)} logs for the period {log_file[1:].upper()} have been processed")
 
-    logger.info(f"{len(logs)} logs for the period {log_file} have been processed")
     return logs
 
 
@@ -138,14 +136,12 @@ if __name__ == "__main__":
     unique_sources: DataFrame = parsed_log.drop_duplicates(subset='SOURCE')
     unique_sources: NDFrame = unique_sources['SOURCE']
     logger.info(f'{len(unique_sources)} entries had unique source ip')
-    # tbl_load_activity(parsed_log)
+    tbl_load_activity(parsed_log)
     new_lookup_count: int = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
-    # log_visual_analysis.analyze(parsed_log, log_file)
-    # historical_visual_analysis.analyze()
-    end: float = time.perf_counter()
-    elapsedTime = dt.timedelta(seconds=int(end - start))
+    log_visual_analysis.analyze(parsed_log, log_file)
+    historical_visual_analysis.analyze()
     logger.info(f'\t**  Log Processing and Analysis ENDED for period: {log_file[1:].upper().split(".")[0]}\t  **')
     # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
-    #           {new_lookup_count} lookup table updates", f"Process Time: {elapsedTime}")
+    #           {new_lookup_count} lookup table updates", f"view log for details")
