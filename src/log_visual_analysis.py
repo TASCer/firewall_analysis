@@ -1,4 +1,3 @@
-# TODO NO COUNTRY plot not adding up. Showing far more than log shows
 import datetime as dt
 import logging
 import matplotlib.pyplot as plt
@@ -8,7 +7,7 @@ import pandas as pd
 from collections import Counter
 from datetime import datetime
 from pandas import DataFrame, Series
-from pandas.core.generic import NDFrame
+from pandas.core.groupby import DataFrameGroupBy
 from sqlalchemy import create_engine, exc
 from sqlalchemy.engine import Engine
 from typing import Union, Any, List, Iterator, Tuple
@@ -20,24 +19,23 @@ logger = logging.getLogger(__name__)
 
 
 # TODO Non-historical No Country issue: logged error != plot count.
-def analyze(log: DataFrame, timespan: str):
+def analyze(log: DataFrame, timespan: str) -> None:
 	"""Takes cureently processed log and presents information to screen and file"""
 	timespan: str = timespan.split('.')[0].replace('\\', '')
 
 	try:
-		engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
-																		my_secrets.dbhost, my_secrets.dbname))
+		engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
 
 	except exc.SQLAlchemyError as e:
 		logger.critical(str(e))
 		engine = None
 		exit()
 
-	freq_ports: Union[DataFrame, Series] = log.groupby(['DPT']).size()
-	freq_ports_sorted: Union[Union[DataFrame, None, Series], Any] = freq_ports.sort_values(ascending=False).head(15)
-	freq_hostnames: Union[DataFrame, Series] = log.groupby(['HOSTNAME']).size()
-	freq_hostnames_sorted: Union[Union[DataFrame, None, Series], Any] = freq_hostnames.sort_values(ascending=False).head(15)
-	firewall_policies: Union[DataFrame, Series] = log.groupby(['POLICY']).size()
+	freq_ports: DataFrameGroupBy = log.groupby(['DPT']).size()
+	freq_ports_sorted: Series = freq_ports.sort_values(ascending=False).head(15)
+	freq_hostnames: DataFrameGroupBy = log.groupby(['HOSTNAME']).size()
+	freq_hostnames_sorted: Series = freq_hostnames.sort_values(ascending=False).head(15)
+	firewall_policies: DataFrameGroupBy = log.groupby(['POLICY']).size()
 	sources: DataFrame = log['SOURCE']
 
 # Get countries for currently processed log
