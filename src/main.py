@@ -5,7 +5,6 @@ import logging
 import my_secrets
 import pandas as pd
 import tbl_update_lookup_country
-import time
 
 from datetime import datetime
 from logging import Logger, Formatter
@@ -15,7 +14,7 @@ from pandas.core.generic import NDFrame
 from pandas.io.parsers import TextFileReader
 from sqlalchemy import create_engine, exc
 from sqlalchemy.engine import Engine
-from typing import Union, Any
+from typing import Tuple
 
 now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
@@ -35,7 +34,7 @@ now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Aug17-Aug21.csv"
+log_file: str = r"\Sep24-Sep25.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -79,7 +78,7 @@ def process_logs() -> DataFrame:
     return logs
 
 
-def tbl_load_activity(cur_log: DataFrame) -> pd.DataFrame:
+def tbl_load_activity(cur_log: DataFrame) -> None:
     """Takes in a pandas Dataframe and APPENDs new log records into the MySQL database: activity
     :param cur_log: 
     """
@@ -98,7 +97,7 @@ def tbl_load_activity(cur_log: DataFrame) -> pd.DataFrame:
             create_activity_tbl: str = "CREATE TABLE if not exists activity (id INT auto_increment, DOW varchar(9), DATE date, TIME time(6), POLICY varchar(100), PROTOCOL varchar(20), SOURCE varchar(15), DPT int, DoNotFragment BOOLEAN, HOSTNAME varchar(120), primary key(id));"
             engine.execute(create_activity_tbl)
 
-        except exc.SQLAlchemyError as e:
+        except (exc.SQLAlchemyError, exc.DataError) as e:
             logger.exception(str(e))
 
         try:
@@ -125,7 +124,7 @@ def tbl_load_lookup(unique_ips: list) -> int:
             conn.execute(sql_inserts)
 
         new_lookups = conn.execute('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;''')
-        new_lookups_count: object = tuple(n for n in new_lookups)[0][0]
+        new_lookups_count: Tuple = tuple(n for n in new_lookups)[0][0]
 
         return new_lookups_count
 
@@ -134,7 +133,7 @@ if __name__ == "__main__":
     logger: Logger = logging.getLogger(__name__)
     parsed_log: DataFrame = process_logs()
     unique_sources: DataFrame = parsed_log.drop_duplicates(subset='SOURCE')
-    unique_sources: NDFrame = unique_sources['SOURCE']
+    unique_sources: Series = unique_sources['SOURCE']
     logger.info(f'{len(unique_sources)} entries had unique source ip')
     tbl_load_activity(parsed_log)
     new_lookup_count: int = tbl_load_lookup(unique_sources)
