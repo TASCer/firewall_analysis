@@ -10,7 +10,7 @@ from logging import Logger
 from pandas import DataFrame
 from sqlalchemy.engine import Engine
 from sqlalchemy import create_engine, exc
-from typing import Union, Iterator
+# from typing import Union, Iterator
 
 now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
@@ -21,9 +21,8 @@ logger: Logger = logging.getLogger(__name__)
 def analyze():
 	"""Takes log analysis data stored in databases and presents information to screen and file"""
 	try:
-		engine: Engine = create_engine(
-			"mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost,
-											my_secrets.dbname))
+		engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
+
 	except exc.SQLAlchemyError as e:
 		logger.critical(str(e))
 		engine = None

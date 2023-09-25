@@ -21,8 +21,8 @@ def update() -> object:
     """Updates lookup table with unique ips from ALPHA-2 to full country name"""
     logger: Logger = logging.getLogger(__name__)
     try:
-        engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
-                                                                        my_secrets.dbhost, my_secrets.dbname))
+        engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
+
     except exc.SQLAlchemyError as e:
         logger.critical(str(e))
         engine = None
