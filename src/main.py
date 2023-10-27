@@ -1,17 +1,16 @@
 import datetime as dt
-import historical_visual_analysis
-import log_visual_analysis
 import logging
 import my_secrets
 import pandas as pd
+import pymysql
 import tbl_update_lookup_country
+import visual_analysis_historical
+import visual_analysis_latest
 
 from datetime import datetime
 from logging import Logger, Formatter
 from mailer import send_mail
 from pandas import Series, DataFrame
-from pandas.core.generic import NDFrame
-from pandas.io.parsers import TextFileReader
 from sqlalchemy import create_engine, exc
 from sqlalchemy.engine import Engine
 from typing import Tuple
@@ -34,7 +33,7 @@ now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Sep24-Sep25.csv"
+log_file: str = r"\Oct26-Oct27.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -97,7 +96,7 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
             create_activity_tbl: str = "CREATE TABLE if not exists activity (id INT auto_increment, DOW varchar(9), DATE date, TIME time(6), POLICY varchar(100), PROTOCOL varchar(20), SOURCE varchar(15), DPT int, DoNotFragment BOOLEAN, HOSTNAME varchar(120), primary key(id));"
             engine.execute(create_activity_tbl)
 
-        except (exc.SQLAlchemyError, exc.DataError) as e:
+        except (exc.SQLAlchemyError, exc.DataError, pymysql.err.DataError) as e:
             logger.exception(str(e))
 
         try:
@@ -106,7 +105,7 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
                         if_exists='append',
                         index=False,
                            )
-        except exc.SQLAlchemyError as e:
+        except (exc.SQLAlchemyError, exc.DataError, pymysql.err.DataError) as e:
             logger.exception(str(e))
 
         logger.info("Activity database has been appended with new logs")
@@ -139,8 +138,8 @@ if __name__ == "__main__":
     new_lookup_count: int = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
-    log_visual_analysis.analyze(parsed_log, log_file)
-    historical_visual_analysis.analyze()
+    visual_analysis_latest.analyze(parsed_log, log_file)
+    # visual_analysis_historical.analyze()
     logger.info(f'\t**  Log Processing and Analysis ENDED for period: {log_file[1:].upper().split(".")[0]}\t  **')
     # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
     #           {new_lookup_count} lookup table updates", f"view log for details")
