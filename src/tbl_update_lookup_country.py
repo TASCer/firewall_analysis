@@ -29,6 +29,7 @@ def update() -> object:
         exit()
 
     with engine.connect() as conn, conn.begin():
+        logger.info("UPDATING new lookup table entries with country names via WHOIS")
         try:
             sql: str = '''SELECT source, country from lookup WHERE COUNTRY is null or COUNTRY like '%%HTTP%%';'''  # like '%%HTTP%%' or COUNTRY = 'ZZ' or COUNTRY = 'unknown'
             lookups: CursorResult = conn.execute(sql)
@@ -81,3 +82,6 @@ def update() -> object:
 
             else:
                 conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
+
+    logger.info("COMPLETED updating new lookup table entries with country names via WHOIS")
+
