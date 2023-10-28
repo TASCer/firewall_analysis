@@ -33,7 +33,7 @@ now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Oct26-Oct27.csv"
+log_file: str = r"\Oct27-Oct28.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -83,8 +83,7 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
     """
 
     try:
-        engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass,
-                                my_secrets.dbhost, my_secrets.dbname))
+        engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
 
     except exc.SQLAlchemyError as e:
         engine = None
@@ -93,7 +92,19 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
     with engine.connect() as conn, conn.begin():
 
         try:
-            create_activity_tbl: str = "CREATE TABLE if not exists activity (id INT auto_increment, DOW varchar(9), DATE date, TIME time(6), POLICY varchar(100), PROTOCOL varchar(20), SOURCE varchar(15), DPT int, DoNotFragment BOOLEAN, HOSTNAME varchar(120), primary key(id));"
+            create_activity_tbl: str = """CREATE TABLE if not exists activity (
+                                        id INT auto_increment, 
+                                        DOW varchar(9), 
+                                        DATE date, 
+                                        TIME time(6), 
+                                        POLICY varchar(100), 
+                                        PROTOCOL varchar(20), 
+                                        SOURCE varchar(15), 
+                                        DPT int, 
+                                        DoNotFragment BOOLEAN, 
+                                        HOSTNAME varchar(120), 
+                                        primary key(id));
+                                        """
             engine.execute(create_activity_tbl)
 
         except (exc.SQLAlchemyError, exc.DataError, pymysql.err.DataError) as e:
@@ -113,10 +124,14 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
 
 def tbl_load_lookup(unique_ips: list) -> int:
     """Takes distinct ip addresses from processed logs and INSERTS the MySQL database: lookup"""
-    engine: Engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(my_secrets.dbuser, my_secrets.dbpass, my_secrets.dbhost, my_secrets.dbname))
+    engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
     with engine.connect() as conn, conn.begin():
-        create_lookup: str = "CREATE TABLE IF NOT EXISTS lookup (SOURCE varchar(15), COUNTRY CHAR(100), PRIMARY KEY (SOURCE))"
-        conn.execute(create_lookup)
+        create_lookup_tbl: str = """CREATE TABLE IF NOT EXISTS lookup (
+                            SOURCE varchar(15), 
+                            COUNTRY CHAR(100), 
+                            PRIMARY KEY (SOURCE));
+                            """
+        conn.execute(create_lookup_tbl)
 
         for ip in unique_ips:
             sql_inserts: str = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
@@ -139,7 +154,7 @@ if __name__ == "__main__":
     logger.info(f"{new_lookup_count} new records added to lookup table")
     tbl_update_lookup_country.update()
     visual_analysis_latest.analyze(parsed_log, log_file)
-    # visual_analysis_historical.analyze()
+    visual_analysis_historical.analyze()
     logger.info(f'\t**  Log Processing and Analysis ENDED for period: {log_file[1:].upper().split(".")[0]}\t  **')
     # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
     #           {new_lookup_count} lookup table updates", f"view log for details")
