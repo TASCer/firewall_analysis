@@ -3,7 +3,7 @@ import logging
 import my_secrets
 import pandas as pd
 import pymysql
-import tbl_update_lookup_country
+import update_lookup_country
 import visual_analysis_historical
 import visual_analysis_latest
 
@@ -11,7 +11,7 @@ from datetime import datetime
 from logging import Logger, Formatter
 from mailer import send_mail
 from pandas import Series, DataFrame
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine, exc, text
 from sqlalchemy.engine import Engine
 from typing import Tuple
 
@@ -33,7 +33,7 @@ now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Oct27-Oct28.csv"
+log_file: str = r"\Oct29-Oct30.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -105,7 +105,7 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
                                         HOSTNAME varchar(120), 
                                         primary key(id));
                                         """
-            engine.execute(create_activity_tbl)
+            conn.execute(text(create_activity_tbl))
 
         except (exc.SQLAlchemyError, exc.DataError, pymysql.err.DataError) as e:
             logger.exception(str(e))
@@ -131,13 +131,13 @@ def tbl_load_lookup(unique_ips: list) -> int:
                             COUNTRY CHAR(100), 
                             PRIMARY KEY (SOURCE));
                             """
-        conn.execute(create_lookup_tbl)
+        conn.execute(text(create_lookup_tbl))
 
         for ip in unique_ips:
             sql_inserts: str = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
-            conn.execute(sql_inserts)
+            conn.execute(text(sql_inserts))
 
-        new_lookups = conn.execute('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;''')
+        new_lookups = conn.execute(text('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;'''))
         new_lookups_count: Tuple = tuple(n for n in new_lookups)[0][0]
 
         return new_lookups_count
@@ -152,9 +152,9 @@ if __name__ == "__main__":
     tbl_load_activity(parsed_log)
     new_lookup_count: int = tbl_load_lookup(unique_sources)
     logger.info(f"{new_lookup_count} new records added to lookup table")
-    tbl_update_lookup_country.update()
+    update_lookup_country.update()
     visual_analysis_latest.analyze(parsed_log, log_file)
     visual_analysis_historical.analyze()
     logger.info(f'\t**  Log Processing and Analysis ENDED for period: {log_file[1:].upper().split(".")[0]}\t  **')
-    # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
-    #           {new_lookup_count} lookup table updates", f"view log for details")
+    send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
+              {new_lookup_count} lookup table updates", f"view log for details")
