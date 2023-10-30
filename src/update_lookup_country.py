@@ -8,7 +8,7 @@ from ipwhois.utils import get_countries
 from ipwhois import IPWhois
 from logging import Logger
 from sqlalchemy.engine import Engine, CursorResult
-from sqlalchemy import exc, create_engine
+from sqlalchemy import exc, create_engine, text
 from typing import Optional, Any
 
 now: datetime = dt.datetime.now()
@@ -32,7 +32,7 @@ def update() -> object:
         logger.info("UPDATING new lookup table entries with country names via WHOIS")
         try:
             sql: str = '''SELECT source, country from lookup WHERE COUNTRY is null or COUNTRY like '%%HTTP%%';'''  # like '%%HTTP%%' or COUNTRY = 'ZZ' or COUNTRY = 'unknown'
-            lookups: CursorResult = conn.execute(sql)
+            lookups: CursorResult = conn.execute(text(sql))
 
         except exc.SQLAlchemyError as e:
             logger.warning(str(e))
@@ -52,7 +52,7 @@ def update() -> object:
                 error: str = str(e).split('http:')[0]
                 logger.error(f"{error} {ip}")
 
-                conn.execute(f'''update lookup SET country = '{error}' WHERE SOURCE = '{ip}';''')
+                conn.execute(text(f'''update lookup SET country = '{error}' WHERE SOURCE = '{ip}';'''))
                 continue
 
             asn_alpha2: str = result['asn_country_code']
@@ -60,7 +60,7 @@ def update() -> object:
             if asn_alpha2 is None or asn_alpha2 == '':
                 logger.warning(f"{ip} had no alpha2 code, setting country name to 'unknown'")
                 asn_alpha2: str = 'unknown'
-                conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
+                conn.execute(text(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';'''))
                 continue
 
             elif asn_alpha2.islower():
@@ -72,16 +72,16 @@ def update() -> object:
 
             if not country_name:
                 logger.warning("Country Name not found in COUNTRIES, setting it to alpha-2")
-                conn.execute(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';''')
+                conn.execute(text(f'''update lookup SET country = '{asn_alpha2}' WHERE SOURCE = '{ip}';'''))
                 continue
 
             elif "'" in country_name:
                 country_name = country_name.replace("'", "''")
                 logger.warning(f"Apostrophe found in {country_name}")
-                conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
+                conn.execute(text(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';'''))
 
             else:
-                conn.execute(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';''')
+                conn.execute(text(f'''update lookup SET country = '{country_name}' WHERE SOURCE = '{ip}';'''))
 
     logger.info("COMPLETED updating new lookup table entries with country names via WHOIS")
 

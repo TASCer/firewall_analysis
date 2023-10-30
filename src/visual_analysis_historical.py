@@ -3,6 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 import my_secrets
 import pandas as pd
+import sqlalchemy as sa
 
 
 from datetime import datetime
@@ -30,25 +31,26 @@ def analyze():
 
 	# TODO hostname query takes a long time. groupby.count()?
 	with engine.connect() as conn, conn.begin():
-		top_countries: DataFrame = pd.read_sql('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup 
-												group by COUNTRY order by hits desc limit 30;''',
-							con=conn, index_col='COUNTRY')
-		nocountry: DataFrame = pd.read_sql('''SELECT COUNTRY, count(*) as hits from lookup WHERE country = '' 
+		q_top_countries = sa.text('''SELECT COUNTRY, count(*) as hits FROM fwlogs.lookup 
+												group by COUNTRY order by hits desc limit 30;''')
+		top_countries: DataFrame = pd.read_sql(q_top_countries,	con=conn, index_col='COUNTRY')
+		q_nocountry = sa.text('''SELECT COUNTRY, count(*) as hits from lookup WHERE country = '' 
 											or length(country) = 2 or country like '%%HTTP%%' or country = 'unknown' 
-											group by country order by hits desc;''',
-							con=conn, index_col='COUNTRY')
-		freq_ports: DataFrame = pd.read_sql('''SELECT DPT, count(DPT) as hits from activity group by DPT 
-											order by hits desc limit 15;''',
-							con=conn, index_col='DPT')
-		freq_hostnames: DataFrame = pd.read_sql('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity 
-												WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''',
-							con=conn, index_col='HOSTNAME')
-		firewall_policies: DataFrame = pd.read_sql('''SELECT POLICY, count(POLICY) as hits from activity 
-													where POLICY !='WAN_LOCAL-default-D' group by POLICY;''',
-							con=conn, index_col='POLICY')
-		hist_start: DataFrame = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE ASC limit 1;''', con=conn)
-
-		hist_end: DataFrame = pd.read_sql('''SELECT DATE from fwlogs.activity order by DATE desc limit 1;''', con=conn)
+											group by country order by hits desc;''')
+		nocountry: DataFrame = pd.read_sql(q_nocountry,	con=conn, index_col='COUNTRY')
+		q_freq_ports = sa.text('''SELECT DPT, count(DPT) as hits from activity group by DPT 
+											order by hits desc limit 15;''')
+		freq_ports: DataFrame = pd.read_sql(q_freq_ports, con=conn, index_col='DPT')
+		q_freq_hostnames = sa.text('''SELECT HOSTNAME, count(HOSTNAME) as hits from activity 
+												WHERE HOSTNAME != '' group by HOSTNAME order by hits desc limit 15;''')
+		freq_hostnames: DataFrame = pd.read_sql(q_freq_hostnames, con=conn, index_col='HOSTNAME')
+		q_firewall_policies = sa.text('''SELECT POLICY, count(POLICY) as hits from activity 
+													where POLICY !='WAN_LOCAL-default-D' group by POLICY;''')
+		firewall_policies: DataFrame = pd.read_sql(q_firewall_policies,	con=conn, index_col='POLICY')
+		q_hist_start = sa.text('''SELECT DATE from fwlogs.activity order by DATE ASC limit 1;''')
+		hist_start: DataFrame = pd.read_sql(q_hist_start, con=conn)
+		q_hist_end = sa.text('''SELECT DATE from fwlogs.activity order by DATE desc limit 1;''')
+		hist_end: DataFrame = pd.read_sql(q_hist_end, con=conn)
 
 	hist_start_date: str = hist_start['DATE'][0]
 	hist_end_date: str = hist_end['DATE'][0]

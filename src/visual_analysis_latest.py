@@ -3,6 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 import my_secrets
 import pandas as pd
+import sqlalchemy as sa
 
 from collections import Counter
 from datetime import datetime
@@ -43,8 +44,8 @@ def analyze(log: DataFrame, timespan: str) -> None:
 	no_country: List[str] = []
 	with engine.connect() as conn, conn.begin():
 		for source in sources:
-			get_country: DataFrame = pd.read_sql(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''',
-								con=conn)
+			q_sql = sa.text(f'''SELECT COUNTRY FROM fwlogs.lookup where SOURCE = '{source}';''')
+			get_country: DataFrame = pd.read_sql(q_sql,	con=conn)
 			country: str = get_country.values[0][0]
 			if len(country) == 2 or country.startswith('HTTP') or country == '' or country == 'unknown':
 				no_country.append(country)
