@@ -1,6 +1,6 @@
 # SOHO Firewall Activity Analysis
 
-USING Python 3.8 with SQLAnarchy imported:
+Python 3.8:
 
 1 - PARSE exported csv logs from the FREE Syslog Watcher 4.5.2 application
 
@@ -22,7 +22,7 @@ USING Python 3.8 with SQLAnarchy imported:
 
 src folder contains: 
 
-        1. Python files need to run analysis
+        1. Python files needed to run analysis
 
 sample folder contains: 
 
