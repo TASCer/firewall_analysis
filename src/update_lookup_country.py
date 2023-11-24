@@ -1,3 +1,4 @@
+# ~62 whois lookups per minute
 import datetime as dt
 import ipwhois
 import logging
@@ -31,7 +32,7 @@ def update() -> object:
     with engine.connect() as conn, conn.begin():
         logger.info("UPDATING new lookup table entries with country names via WHOIS")
         try:
-            sql: str = '''SELECT source, country from lookup WHERE COUNTRY is null or COUNTRY like '%%HTTP%%';'''  # like '%%HTTP%%' or COUNTRY = 'ZZ' or COUNTRY = 'unknown'
+            sql: str = '''SELECT source, country from lookup WHERE COUNTRY is null or COUNTRY like '%%HTTP%%';'''  # COUNTRY = 'ZZ' or COUNTRY = 'unknown'
             lookups: CursorResult = conn.execute(text(sql))
 
         except exc.SQLAlchemyError as e:
