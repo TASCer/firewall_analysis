@@ -11,7 +11,7 @@ from datetime import datetime
 from logging import Logger, Formatter
 from mailer import send_mail
 from pandas import Series, DataFrame
-from sqlalchemy import create_engine, exc, text
+from sqlalchemy import create_engine, exc, text, CursorResult
 from sqlalchemy.engine import Engine
 from typing import Tuple
 
@@ -33,7 +33,7 @@ now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Oct29-Oct30.csv"
+log_file: str = r"\Nov23-Nov24.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -86,13 +86,13 @@ def tbl_load_activity(cur_log: DataFrame) -> None:
         engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
 
     except exc.SQLAlchemyError as e:
-        engine = None
+        engine: Engine = None
         logger.exception(str(e))
 
     with engine.connect() as conn, conn.begin():
 
         try:
-            create_activity_tbl: str = """CREATE TABLE if not exists activity (
+            create_activity_tbl: CursorResult = """CREATE TABLE if not exists activity (
                                         id INT auto_increment, 
                                         DOW varchar(9), 
                                         DATE date, 
@@ -126,7 +126,7 @@ def tbl_load_lookup(unique_ips: list) -> int:
     """Takes distinct ip addresses from processed logs and INSERTS the MySQL database: lookup"""
     engine: Engine = create_engine(f"mysql+pymysql://{my_secrets.dbuser}:{my_secrets.dbpass}@{my_secrets.dbhost}/{my_secrets.dbname}")
     with engine.connect() as conn, conn.begin():
-        create_lookup_tbl: str = """CREATE TABLE IF NOT EXISTS lookup (
+        create_lookup_tbl: CursorResult = """CREATE TABLE IF NOT EXISTS lookup (
                             SOURCE varchar(15), 
                             COUNTRY CHAR(100), 
                             PRIMARY KEY (SOURCE));
@@ -134,10 +134,10 @@ def tbl_load_lookup(unique_ips: list) -> int:
         conn.execute(text(create_lookup_tbl))
 
         for ip in unique_ips:
-            sql_inserts: str = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
+            sql_inserts: CursorResult = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
             conn.execute(text(sql_inserts))
 
-        new_lookups = conn.execute(text('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;'''))
+        new_lookups: CursorResult = conn.execute(text('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;'''))
         new_lookups_count: Tuple = tuple(n for n in new_lookups)[0][0]
 
         return new_lookups_count
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     logger.info(f"{new_lookup_count} new records added to lookup table")
     update_lookup_country.update()
     visual_analysis_latest.analyze(parsed_log, log_file)
-    visual_analysis_historical.analyze()
+    # visual_analysis_historical.analyze()
     logger.info(f'\t**  Log Processing and Analysis ENDED for period: {log_file[1:].upper().split(".")[0]}\t  **')
-    send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
-              {new_lookup_count} lookup table updates", f"view log for details")
+    # send_mail(f"Firewall Analysis COMPLETE: Updated {len(parsed_log)} log entries - {len(unique_sources)} unique. \
+    #           {new_lookup_count} lookup table updates", f"view log for details")
