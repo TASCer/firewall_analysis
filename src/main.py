@@ -33,7 +33,7 @@ now: datetime = dt.datetime.now()
 todays_date: str = now.strftime('%D').replace('/', '-')
 
 log_path: str = my_secrets.logPath
-log_file: str = r"\Nov24-Nov25.csv"
+log_file: str = r"\Nov25-Nov26.csv"
 
 export_path: str = f"{log_path}{log_file}"
 
@@ -137,8 +137,8 @@ def tbl_load_lookup(unique_ips: list) -> int:
             sql_inserts: text = f"INSERT IGNORE INTO lookup(SOURCE) VALUES('{ip}');"
             conn.execute(text(sql_inserts))
 
-        new_lookups: text = conn.execute(text('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;'''))
-        new_lookups_count: Tuple = tuple(n for n in new_lookups)[0][0]
+        new_lookups: CursorResult = conn.execute(text('''SELECT count(*) FROM fwlogs.lookup where COUNTRY is null;'''))
+        new_lookups_count: int = tuple(n for n in new_lookups)[0][0]
 
         return new_lookups_count
 
