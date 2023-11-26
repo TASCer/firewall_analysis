@@ -1,5 +1,6 @@
 pandas<=2.1.2
 sqlalchemy==2.0.22
+SQLAlchemy-Utils==0.41.1
 matplotlib<=3.8.0
 ipwhois==1.2.0
 pymysql==1.1.0
